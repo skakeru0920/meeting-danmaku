@@ -31,7 +31,7 @@ Zoom Meeting ──chat──▶ Meeting SDK client ──event──▶ Node.js
 
 ## 進め方
 
-「1 spike = 1 hypothesis」の単位で進める。各 Spike は `docs/spikes/` に仮説・検証手順・成功条件・結果を記録し、成功したらコミットする。詳細は [CLAUDE.md](./CLAUDE.md) と [docs/research.md](./docs/research.md) を参照。
+「1 spike = 1 hypothesis」の単位で進める。各 Spike は `docs/spikes/` に仮説・検証手順・成功条件・結果を記録し、成功したらコミットする。詳細は [AGENTS.md](./AGENTS.md) と [docs/research.md](./docs/research.md) を参照。
 
 Spike 予定:
 
