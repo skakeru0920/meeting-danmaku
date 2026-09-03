@@ -1,0 +1,14 @@
+{
+  "name": "meeting-danmaku",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Zoom ミーティング内チャットをニコニコ動画風に流すオーバーレイツール(MVP)",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "echo \"Spike 3 でサーバー実装後に設定する\" && exit 1"
+  },
+  "license": "UNLICENSED"
+}
