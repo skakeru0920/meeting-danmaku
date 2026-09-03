@@ -50,19 +50,25 @@ Phase 4 の実現方法は Plan 002 の結果で決まる。Electron の透過�
 
 ## 進め方
 
-作業単位は Plan。各 Plan は `docs/plan/` にゴール・手順・完了条件を記録し、やってみないと分からないものは `## Spike` 節に仮説と結果を残す。完了したらコミットする。詳細は [AGENTS.md](./AGENTS.md) と [docs/research.md](./docs/research.md) を参照。
+作業単位は Plan。ゴール・手順・完了条件を [docs/plan/](./docs/plan/README.md) に記録し、
+やってみないと分からないものは `## Spike` 節に仮説と結果を残す。
 
-Plan 一覧:
+| # | Plan | 種別 |
+|---|---|---|
+| 001 | Zoom チャットを受信する(SDK 選定を含む) | 検証 |
+| 002 | Electron 透過オーバーレイが画面共有に映るか | 検証 |
+| 003 | Zoom 抜きでコメントが流れる状態を作る | 実装 |
+| 004 | Zoom チャットを画面共有に流す | 実装 |
 
-1. Zoom チャットを `console.log` する(SDK 選定を含む。最優先)
-2. Electron 透過オーバーレイが画面共有に映るか検証する(1 と並列で着手可能)
-3. ダミーコメントを流す HTML(Zoom とは完全に切り離す)
-4. WebSocket で Node.js → overlay へ配信
-5. Zoom と overlay を接続
-6. 実際の画面共有で表示を確認(Electron / OBS は 2 の結果次第)
+001 / 002 / 003 は互いに独立しており並列で進められる。004 は 3 つすべてが前提。
 
-Plan 002 は Zoom SDK にも WebSocket にも依存しないため、Plan 001 と並列で進められる。
-タスク単位の依存関係は [TODO.md](./TODO.md) を参照。
+ドキュメントの役割:
+
+- [TODO.md](./TODO.md) — これから何をするか。タスク単位の依存関係
+- [docs/plan/](./docs/plan/README.md) — なぜそうしたか、何が分かったか
+- [docs/decisions/](./docs/decisions/README.md) — 今どうなっているか(正本)
+
+詳細は [AGENTS.md](./AGENTS.md) と [docs/research.md](./docs/research.md) を参照。
 
 ## 技術スタック(候補)
 
@@ -78,14 +84,14 @@ React・DB・認証・デプロイ・Docker などは MVP では扱わない。
 
 ```text
 .
-├── CLAUDE.md          # AI 駆動開発のルール
+├── AGENTS.md          # AI 駆動開発のルール
 ├── README.md
+├── TODO.md            # 作業の入口。Ready / Blocked / Icebox
+├── TODO_ARCHIVE.md    # 完了タスク(新しいものほど上)
 ├── docs/
-│   ├── TODO.md        # 着手予定タスク(作業の入口)
-│   ├── TODO_ARCHIVE.md # 完了タスク
 │   ├── research.md    # 初期調査メモ(要件・疑問点・代替案)
 │   ├── plan/          # タスクの詳細(不確実なものは Spike 節を持つ)
-│   └── adr/           # 設計判断の記録(SDK 選定など)
+│   └── decisions/     # 現在有効な決定事項(正本)
 └── src/
     ├── zoom/          # Zoom Meeting SDK アダプタ(CommentSource 実装)
     ├── server/        # Express + WebSocket サーバー

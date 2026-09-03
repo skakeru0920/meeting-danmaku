@@ -46,8 +46,10 @@ TODO.md は 3 つのセクションを持つ。
 1. TODO.md の該当行を切り取る(Ready / Blocked どちらのテーブルからでも)。
 2. [TODO_ARCHIVE.md](./TODO_ARCHIVE.md) の `<!-- ARCHIVE_TOP -->` の直下へ貼る。常に一番上。
 3. 貼った行に完了日を足す。
-4. 対応する plan の `状態` を `完了` にし、`## Spike` があれば `結果` を埋める。
-   失敗しても消さない。失敗も資産。
+4. 対応する plan の `状態` を更新し、`## Spike` があれば `結果` を埋める。
+   失敗しても消さない。失敗も資産。Plan のすべての TODO が終わったら
+   `状態` を `完了` にし、`docs/plan/README.md` の一覧も更新する。
+   決定事項が生まれていれば `docs/decisions/` へ反映する。
 5. TODO.md の他タスクの `depends` から完了 ID を削除する。
 6. `depends` が空になったタスクを **Blocked から Ready へ移す**。
 
@@ -75,17 +77,37 @@ TODO.md は 3 つのセクションを持つ。
 - 動作確認前に本番用の構成や将来向けの抽象化を確定しない。実際に観測した結果をもとに次の判断を行う
 - 各 Plan の完了条件を満たしたらそこで止め、次の機能は次の Plan として扱う
 
+### ドキュメントの使い分け
+
+3 つを役割で分ける。同じことを 2 箇所に書かない。
+
+| | 内容 | 性質 |
+|---|---|---|
+| [TODO.md](./TODO.md) | これから何をするか | 完了したら archive へ移動 |
+| `docs/plan/` | なぜそうしたか、何が分かったか | 追記のみ。**完了しても移動しない** |
+| `docs/decisions/` | 今どうなっているか | 上書き更新。常に正本 |
+
+判断の履歴は Plan に残り、現在の結論は decisions に集まる。
+「結局いま何が決まっているのか」を探すときは decisions だけを読めばよい状態を保つ。
+decisions が読みにくくなったらトピック単位でファイルへ切り出す。
+
 ### Plan と Spike
 
-- 作業単位は Plan。着手前に `docs/plan/NNN-<slug>.md` へ **ゴール / 手順 / 完了条件** を書く(テンプレは `docs/plan/TEMPLATE.md`)。
-- **やってみないと分からない不確実性がある Plan だけ** `## Spike` 節を持ち、そこに **仮説 / 検証方法 / 結果** を書く。確実にできることの手順書に Spike 節は要らない。
+- 作業単位は Plan。着手前に `docs/plan/NNN-<slug>.md` へ **狙い / 前提 / やること / 完了条件** を書く(テンプレは `docs/plan/TEMPLATE.md`)。追加したら `docs/plan/README.md` の一覧も更新する。
+- Plan には **種別**(検証 / 実装)を持たせる。
+  - **検証**: この Plan を終えると何が分かるか。Lean に不確実性を潰す局面で使う
+  - **実装**: 誰に何が届くか。ユーザーストーリーに近い単位で切る
+- Phase 0 は不確実性が高いので検証が中心になる。検証が済んだら実装へ切り替える。
+- **`## Spike` 節は不確実性がある Plan だけが持つ**。そこに **仮説 / 検証方法 / 結果** を書く。確実にできることの手順書に Spike 節は要らない。
 - Spike は 1 つにつき仮説 1 つ。成功・失敗どちらでも結果を同じファイルに追記する。失敗も資産。
+- Plan の `## 前提` には、依存する既に確定した事実をどの Plan の結果か明記して書く。**未検証の仮定の上に積まない。**
+- Spike の結論が決定事項になったら `docs/decisions/` を更新する。
 - 完了したら 1 Plan につき 1 コミット(必要なら数コミット)。
 
 ### いきなり実装しない
 
 - Phase 0 では Research → Plan 作成 → 最小環境構築 → chat receive の順。
-- **SDK 選定を間違えると大きく手戻りする**。Meeting SDK(Web / Electron / macOS native)の選定は必ず公式ドキュメントを一次情報として確認し、結論を `docs/adr/` に ADR として残す。
+- **SDK 選定を間違えると大きく手戻りする**。Meeting SDK(Web / Electron / macOS native)の選定は必ず公式ドキュメントを一次情報として確認し、結論を `docs/decisions/` に反映する。
 - Zoom 公式ドキュメント(Meeting SDK Overview / Authorization / In-meeting chat / platform-specific docs)を優先し、古いブログや Stack Overflow だけで判断しない。
 - **Zoom Team Chat と Meeting 内チャットを混同しない**。Chatbot API は今回の対象外。
 
@@ -125,7 +147,7 @@ TODO.md            作業の入口。Ready / Blocked / Icebox
 TODO_ARCHIVE.md    完了タスク。新しいものほど上
 docs/research.md   初期調査メモ。要件・疑問点・代替案の一次ソース
 docs/plan/         タスクの詳細。不確実なものは Spike 節を持つ
-docs/adr/          設計判断(SDK 選定など)
+docs/decisions/    現在有効な決定事項。正本。上書き更新する
 src/zoom/          Meeting SDK アダプタ(CommentSource 実装)
 src/server/        Express + ws サーバー
 src/overlay/       静的 HTML / CSS / JS
