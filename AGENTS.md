@@ -1,12 +1,68 @@
 # AGENTS.md
 
-このリポジトリで AI(Claude Code / Codex など)と協働するときの共通ルール。プロジェクトの背景と要件は `docs/research.md`、進捗は `README.md` と `docs/spikes/` を参照すること。
+このリポジトリで AI(Claude Code / Codex など)と協働するときの共通ルール。プロジェクトの背景と要件は `docs/research.md`、進捗は `README.md` と `docs/plan/` を参照すること。
 
 ## プロジェクト概要
 
-Zoom ミーティング内の **Everyone 宛チャット** をリアルタイムに取得し、ニコニコ動画風に画面へ流すオーバーレイツール。最終的に OBS Browser Source 経由で Zoom 画面共有に重ねる。
+Zoom ミーティング内の **Everyone 宛チャット** をリアルタイムに取得し、ニコニコ動画風に画面へ流すオーバーレイツール。
+
+目的は 2 つ。
+
+1. **発表者自身がチャットを把握する** — 画面共有中でチャット欄が見えないときも内容が分かる
+2. **視聴者にもコメントを見せる** — 画面共有の映像にコメントが重なって見える
+
+このため overlay の表示先として 2 方式を想定している。
+
+- **Electron 透過ウィンドウ**: デスクトップに直接重ねる。目的 1 を満たす。デスクトップ全体共有に映り込めば目的 2 も同時に満たせる(**未検証**、Plan 002)
+- **OBS Browser Source**: OBS で合成して共有する。目的 2 のみを満たす
+
+overlay の HTML / CSS / JS は両方式で共用する。どちらを本命にするかは Plan 002 の結果で決まる。
 
 現在は **Phase 0(Zoom 仕様調査)**。MVP のゴールは「Zoom チャットに Hello と投稿 → ローカル console に sender と message が出る」まで。
+
+表示方式の検証(Plan 002 / T-004)は Zoom SDK にも WebSocket にも依存しないため、Phase 0 と並列で進められる。
+
+## TODO 運用
+
+作業の入口は必ず [TODO.md](./TODO.md)。着手前に開き、完了後に更新する。
+タスクの詳細(ゴール・手順・完了条件)は `docs/plan/` に置き、TODO.md には書かない。
+
+TODO.md は 3 つのセクションを持つ。
+
+- **Ready** — 依存なし。今すぐ着手でき、この中のタスクは並列に進めてよい
+- **Blocked** — `depends` のタスクが未完了。着手しない
+- **Icebox** — やるか未確定の候補。着手前にタスク化して Ready か Blocked へ移す
+
+### 着手するとき
+
+1. TODO.md の **Ready** からタスクを選ぶ。Blocked には着手しない。
+2. 対応する `docs/plan/NNN-<slug>.md` を読む。無ければ先に書く。
+3. plan の `状態` を `未着手` → `進行中` にする。
+
+### 完了したとき
+
+**plan の完了条件を実際に満たしたことを観測してから**、以下を機械的に行う。
+
+1. TODO.md の該当行を切り取る(Ready / Blocked どちらのテーブルからでも)。
+2. [TODO_ARCHIVE.md](./TODO_ARCHIVE.md) の `<!-- ARCHIVE_TOP -->` の直下へ貼る。常に一番上。
+3. 貼った行に完了日を足す。
+4. 対応する plan の `状態` を `完了` にし、`## Spike` があれば `結果` を埋める。
+   失敗しても消さない。失敗も資産。
+5. TODO.md の他タスクの `depends` から完了 ID を削除する。
+6. `depends` が空になったタスクを **Blocked から Ready へ移す**。
+
+### 新しいタスクを足すとき
+
+- ID は既存の最大値 + 1。**archive にある ID も含めて数える**。ID は再利用しない。
+- 対応する plan を `docs/plan/` に作る(テンプレートは `docs/plan/TEMPLATE.md`)。
+- 依存があれば Blocked、なければ Ready へ入れる。
+
+### 守ること
+
+- タスクを TODO.md から**削除しない**。完了しても中止しても archive へ移す。
+  中止の場合は理由を 1 行添える。
+- 完了条件を満たしていないタスクを archive へ移さない。「たぶん動く」で完了にしない。
+- 1 タスク = 1 コミット以上。コミット前にユーザーへ差分を伝えて確認を取る。
 
 ## 開発の進め方
 
@@ -14,20 +70,21 @@ Zoom ミーティング内の **Everyone 宛チャット** をリアルタイム
 
 - その時点で最も不確実性が高い仮説を、観測可能な最小構成で検証する
 - 公式 sample や既存コードを可能な限りそのまま利用し、成功条件に不要な実装は追加しない
-- SDK・ライブラリ・ツールは、現在の Spike の検証に必要になった時点でのみ追加する
+- SDK・ライブラリ・ツールは、現在の Plan に必要になった時点でのみ追加する
 - 複数の候補を同時に作り込まない。最も小さく試せる候補から始め、必須条件を満たせないと分かった場合にだけ次の候補へ進む
 - 動作確認前に本番用の構成や将来向けの抽象化を確定しない。実際に観測した結果をもとに次の判断を行う
-- 各 Spike の成功条件を満たしたらそこで止め、次の機能は次の Spike として扱う
+- 各 Plan の完了条件を満たしたらそこで止め、次の機能は次の Plan として扱う
 
-### 1 spike = 1 hypothesis
+### Plan と Spike
 
-- 作業単位は Spike。必ず **仮説 / 検証方法 / 成功条件** を先に `docs/spikes/NNN-<slug>.md` に書いてから着手する(テンプレは `docs/spikes/TEMPLATE.md`)。
-- 成功・失敗どちらでも結果を同じファイルに追記する。失敗も資産。
-- 成功したら 1 Spike につき 1 コミット(必要なら数コミット)。
+- 作業単位は Plan。着手前に `docs/plan/NNN-<slug>.md` へ **ゴール / 手順 / 完了条件** を書く(テンプレは `docs/plan/TEMPLATE.md`)。
+- **やってみないと分からない不確実性がある Plan だけ** `## Spike` 節を持ち、そこに **仮説 / 検証方法 / 結果** を書く。確実にできることの手順書に Spike 節は要らない。
+- Spike は 1 つにつき仮説 1 つ。成功・失敗どちらでも結果を同じファイルに追記する。失敗も資産。
+- 完了したら 1 Plan につき 1 コミット(必要なら数コミット)。
 
 ### いきなり実装しない
 
-- Phase 0 では Research → Spike plan → 最小環境構築 → chat receive の順。
+- Phase 0 では Research → Plan 作成 → 最小環境構築 → chat receive の順。
 - **SDK 選定を間違えると大きく手戻りする**。Meeting SDK(Web / Electron / macOS native)の選定は必ず公式ドキュメントを一次情報として確認し、結論を `docs/adr/` に ADR として残す。
 - Zoom 公式ドキュメント(Meeting SDK Overview / Authorization / In-meeting chat / platform-specific docs)を優先し、古いブログや Stack Overflow だけで判断しない。
 - **Zoom Team Chat と Meeting 内チャットを混同しない**。Chatbot API は今回の対象外。
@@ -38,7 +95,7 @@ DB、認証、クラウドデプロイ、Docker、React/Next.js、デザイン�
 
 ## 必須の制約
 
-- **private message(DM)を overlay に流さない**。Everyone 宛のみ表示する。SDK から message type / receiver を判定できることを Spike で確認する。
+- **private message(DM)を overlay に流さない**。Everyone 宛のみ表示する。SDK から message type / receiver を判定できることを Plan 001 で確認する。
 - **XSS 防止**: チャット本文は `textContent` で挿入する。`innerHTML` にユーザー入力を渡さない。
 - **チャット履歴を永続化しない**。プロセス上で受け取って即配信する。
 - Zoom の認証情報(SDK Key / Secret、ZAK など)はコミットしない。`.env` に置き、`.env.example` にはキー名だけ書く。
@@ -57,15 +114,17 @@ DB、認証、クラウドデプロイ、Docker、React/Next.js、デザイン�
   ```
 
 - コメント供給源は `CommentSource` インターフェース(`start()` / `stop()`)で差し替え可能にし、`ZoomCommentSource` と `DebugCommentSource` を用意する。ただし抽象化しすぎない。まず動かす。
-- overlay は静的 HTML + CSS animation + Vanilla JS。React は使わない。
+- overlay は静的 HTML + CSS animation + Vanilla JS。React は使わない。Electron 透過ウィンドウと OBS Browser Source の両方から同じ overlay を読み込むため、表示先に依存する処理を overlay 側に持ち込まない。
 - Zoom 接続なしでコメントを投げられる dev-only の `/debug` 画面を用意する。
 - MVP の初期値: コメント表示時間 8 秒固定、同時表示上限 20、レーンは round-robin。
 
 ## ディレクトリ
 
 ```text
+TODO.md            作業の入口。Ready / Blocked / Icebox
+TODO_ARCHIVE.md    完了タスク。新しいものほど上
 docs/research.md   初期調査メモ。要件・疑問点・代替案の一次ソース
-docs/spikes/       Spike の仮説と結果
+docs/plan/         タスクの詳細。不確実なものは Spike 節を持つ
 docs/adr/          設計判断(SDK 選定など)
 src/zoom/          Meeting SDK アダプタ(CommentSource 実装)
 src/server/        Express + ws サーバー
