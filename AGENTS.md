@@ -18,7 +18,10 @@ Zoom ミーティング内の **Everyone 宛チャット** をリアルタイム
 
 overlay の HTML / CSS / JS は両方式で共用する。どちらを本命にするかは Plan 002 の結果で決まる。
 
-現在は **Phase 0(Zoom 仕様調査)**。MVP のゴールは「Zoom チャットに Hello と投稿 → ローカル console に sender と message が出る」まで。
+現在は **Phase 0(Zoom 仕様調査)**。MVP のゴールは「Zoom チャットへ Everyone 宛で投稿すると、
+発表者の画面と視聴者の画面の両方にコメントが流れる」(Plan 004)。
+Phase 0 の当面のゴールはその手前、「Zoom チャットに Hello と投稿 → ローカル console に
+sender と message が出る」(Plan 001)まで。
 
 表示方式の検証(Plan 002 / T-004)は Zoom SDK にも WebSocket にも依存しないため、Phase 0 と並列で進められる。
 
@@ -113,7 +116,8 @@ decisions が読みにくくなったらトピック単位でファイルへ切�
 
 ### 先に作り込まないもの
 
-DB、認証、クラウドデプロイ、Docker、React/Next.js、デザインシステム、multi tenancy、CI/CD の作り込み、自動 moderation、Teams / Google Meet 対応。これらの提案・実装は明示的に依頼されるまで行わない。
+[docs/decisions/](./docs/decisions/README.md) の「MVP で扱わないもの」を参照。
+そこに挙がっているものは、明示的に依頼されるまで提案も実装もしない。
 
 ## 必須の制約
 
@@ -124,21 +128,11 @@ DB、認証、クラウドデプロイ、Docker、React/Next.js、デザイン�
 
 ## 設計方針
 
-- Zoom 固有形式を overlay に直接流さない。内部形式に正規化する:
+**[docs/decisions/](./docs/decisions/README.md) が正本。** 内部形式、overlay の実装方針、
+表示方式、MVP の範囲はそこを読むこと。ここには書かない(二重管理を避けるため)。
 
-  ```ts
-  type OverlayComment = {
-    id: string;
-    sender: string;
-    text: string;
-    timestamp: number;
-  };
-  ```
-
-- コメント供給源は `CommentSource` インターフェース(`start()` / `stop()`)で差し替え可能にし、`ZoomCommentSource` と `DebugCommentSource` を用意する。ただし抽象化しすぎない。まず動かす。
-- overlay は静的 HTML + CSS animation + Vanilla JS。React は使わない。Electron 透過ウィンドウと OBS Browser Source の両方から同じ overlay を読み込むため、表示先に依存する処理を overlay 側に持ち込まない。
-- Zoom 接続なしでコメントを投げられる dev-only の `/debug` 画面を用意する。
-- MVP の初期値: コメント表示時間 8 秒固定、同時表示上限 20、レーンは round-robin。
+決定を変えるときは decisions を上書きし、経緯を該当 Plan の
+「分かったこと・後続への影響」に残す。
 
 ## ディレクトリ
 
