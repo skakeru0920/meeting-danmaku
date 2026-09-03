@@ -21,6 +21,9 @@
 
 `depends` のタスクがすべて archive へ移ったら Ready へ移す。
 
+T-012 は T-004 が**失敗した場合にのみ**着手する。成功すれば不要になるので、
+そのときは archive へ「中止」として移す。
+
 | ID | タスク | depends | Plan |
 |---|---|---|---|
 | T-002 | Zoom チャットを console.log する | T-001 | 001 |
@@ -30,6 +33,7 @@
 | T-009 | dev-only の `/debug` 投稿画面 | T-008 | 003 |
 | T-010 | `ZoomCommentSource` を overlay に接続する | T-003, T-009 | 004 |
 | T-011 | 実際の画面共有で通しで確認する | T-004, T-010 | 004 |
+| T-012 | OBS Browser Source 経由の表示を用意する | T-004 | 004 |
 
 ## Icebox — 検討中
 
@@ -37,6 +41,5 @@
 
 | タスク | メモ |
 |---|---|
-| OBS Browser Source 経由の表示 | T-004 が失敗した場合のみ必要。成功すれば不要 |
 | multi monitor 対応 | research.md が未検討として残している |
 | Keynote フルスクリーン対応 | T-004 の任意条件。満たせなければ将来機能として切る |

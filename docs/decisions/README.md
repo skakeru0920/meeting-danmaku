@@ -29,7 +29,11 @@
 ## overlay の実装
 
 静的 HTML + CSS animation + Vanilla JS。React は使わない。
-Electron / OBS のどちらの表示方式でも同じ overlay を共用する。
+
+Electron / OBS のどちらの表示方式でも同じ overlay を共用するため、
+**表示先に依存する処理を overlay 側に持ち込まない**。
+
+Zoom 接続なしでコメントを投げられる dev-only の `/debug` 画面を用意する。
 
 初期値: コメント表示時間 8 秒固定、同時表示上限 20、レーンは round-robin。
 
