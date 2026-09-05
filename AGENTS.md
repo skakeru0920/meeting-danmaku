@@ -1,6 +1,6 @@
 # AGENTS.md
 
-このリポジトリで AI(Claude Code / Codex など)と協働するときの共通ルール。プロジェクトの背景と要件は `docs/research.md`、進捗は `README.md` と `docs/plan/` を参照すること。
+このリポジトリで AI(Claude Code / Codex など)と協働するときの共通ルール。プロジェクトの背景と要件は `docs/research/`、進捗は `README.md` と `docs/plan/` を参照すること。
 
 ## プロジェクト概要
 
@@ -82,17 +82,29 @@ TODO.md は 3 つのセクションを持つ。
 
 ### ドキュメントの使い分け
 
-3 つを役割で分ける。同じことを 2 箇所に書かない。
+4 つを役割で分ける。同じことを 2 箇所に書かない。
 
 | | 内容 | 性質 |
 |---|---|---|
 | [TODO.md](./TODO.md) | これから何をするか | 完了したら archive へ移動 |
-| `docs/plan/` | なぜそうしたか、何が分かったか | 追記のみ。**完了しても移動しない** |
+| `docs/plan/` | どう進めるか、やって何が分かったか | 追記のみ。**完了しても移動しない** |
+| `docs/research/` | 何を調べて、なぜその案を選んだか | 追記のみ。**却下案も消さない** |
 | `docs/decisions/` | 今どうなっているか | 上書き更新。常に正本 |
 
-判断の履歴は Plan に残り、現在の結論は decisions に集まる。
+判断の履歴は Plan に、選定の根拠は research に残り、現在の結論は decisions に集まる。
 「結局いま何が決まっているのか」を探すときは decisions だけを読めばよい状態を保つ。
 decisions が読みにくくなったらトピック単位でファイルへ切り出す。
+
+### Plan と research の分担
+
+紛らわしいので基準を決めておく。
+
+- **Plan** は作業単位。その Plan を進めた結果どうなったかを書く。1 タスクに 1 対 1 で対応する
+- **research** は調査単位。**選択肢の比較と却下理由**を書く。特定の Plan に閉じない
+
+技術選定・SDK 選定・ライブラリ比較のように「複数の候補を評価して 1 つを選ぶ」作業は
+research へ書き、Plan の「分かったこと」からはリンクするだけにする。
+将来プラットフォームを追加するときに読み返すのは research の方。
 
 ### Plan と Spike
 
@@ -139,7 +151,7 @@ decisions が読みにくくなったらトピック単位でファイルへ切�
 ```text
 TODO.md            作業の入口。Ready / Blocked / Icebox
 TODO_ARCHIVE.md    完了タスク。新しいものほど上
-docs/research.md   初期調査メモ。要件・疑問点・代替案の一次ソース
+docs/research/     調査ノート。技術選定の根拠と却下案。追記のみ。書き方は README を見る
 docs/plan/         タスクの詳細。不確実なものは Spike 節を持つ
 docs/decisions/    現在有効な決定事項。正本。上書き更新する
 src/zoom/          Meeting SDK アダプタ(CommentSource 実装)

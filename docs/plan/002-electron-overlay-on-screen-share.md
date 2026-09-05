@@ -20,7 +20,7 @@ Electron の透過ウィンドウをデスクトップに重ねられるか、�
 なし。Zoom Meeting SDK にも `OverlayComment` にも依存しないため、
 Plan 001 と完全に並列で進められる。
 
-背景として、目的が 2 つあることが判明している(`docs/research.md` の 2026-09-04 追記)。
+背景として、目的が 2 つあることが判明している(`docs/research/` の 2026-09-04 追記)。
 
 - 目的 1: 画面共有中、チャット欄が見えないタイミングでも発表者が内容を把握する
 - 目的 2: 視聴者にもコメントを見やすくする
@@ -62,7 +62,7 @@ Zoom SDK も WebSocket も使わない。ハードコードした矩形かテキ
 Zoom チャットの受信、WebSocket 配信、`OverlayComment` への正規化、
 複数コメントのレーン管理、Google Meet での挙動。いずれも後続で扱う。
 
-multi monitor 対応も範囲外(`docs/research.md` が未検討として残している)。
+multi monitor 対応も範囲外(`docs/research/` が未検討として残している)。
 
 ## Spike
 
@@ -75,7 +75,7 @@ macOS で Electron の透過・クリック透過・常時最前面ウィンド�
 
 ### 検証方法
 
-上の「やること」がそのまま検証手順。`docs/research.md` が挙げていた懸念
+上の「やること」がそのまま検証手順。`docs/research/` が挙げていた懸念
 (macOS の画面キャプチャ仕様 / overlay window が共有に映るか / click-through /
 Spaces / fullscreen / permissions)を実際に観測して潰す。
 

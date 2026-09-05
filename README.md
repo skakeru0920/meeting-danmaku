@@ -68,7 +68,7 @@ Phase 4 の実現方法は Plan 002 の結果で決まる。Electron の透過�
 - [docs/plan/](./docs/plan/README.md) — なぜそうしたか、何が分かったか
 - [docs/decisions/](./docs/decisions/README.md) — 今どうなっているか(正本)
 
-詳細は [AGENTS.md](./AGENTS.md) と [docs/research.md](./docs/research.md) を参照。
+詳細は [AGENTS.md](./AGENTS.md) と [docs/research/](./docs/research/README.md) を参照。
 
 ## 技術スタック(候補)
 
@@ -89,7 +89,7 @@ React・DB・認証・デプロイ・Docker などは MVP では扱わない。
 ├── TODO.md            # 作業の入口。Ready / Blocked / Icebox
 ├── TODO_ARCHIVE.md    # 完了タスク(新しいものほど上)
 ├── docs/
-│   ├── research.md    # 初期調査メモ(要件・疑問点・代替案)
+│   ├── research/      # 調査ノート(初期メモ・技術選定の根拠)
 │   ├── plan/          # タスクの詳細(不確実なものは Spike 節を持つ)
 │   └── decisions/     # 現在有効な決定事項(正本)
 └── src/
