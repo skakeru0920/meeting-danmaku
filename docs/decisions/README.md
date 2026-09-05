@@ -14,10 +14,30 @@
 
 ## Zoom チャット受信
 
-**未決定。** Plan 001 で Meeting SDK を選定する。
+**採用**: Web Meeting SDK(`@zoom/meetingsdk`)の **Component View**。
 
-決まったら以下を書く: 採用 SDK と検証済みバージョン / 必要な認証構成
-(ZAK・OBF 等)/ Everyone 宛と DM を判別する条件。
+- バージョン: v6.2.0(2026-09-05 時点の最新。**動作は未検証**)
+- チャット受信: `client.on('chat-on-message', callback)`
+- payload 型: `ChatMessage | ChatRecord`。`sender.name` / `message` /
+  `receiver` / `timestamp` を持つ
+
+**認証構成**: Marketplace の **OAuth アプリ**を作り、その Client ID / Client Secret で
+SDK JWT(signature)を生成する。自分のアカウント内のミーティングへ participant として
+join する場合は **JWT のみでよく、ZAK / OBF は不要**(公式ドキュメントの記載)。
+
+**Everyone 宛と DM の判別条件**: **未確定。** payload の `receiver` で判別できる
+見込みだが、Everyone 宛のときに `receiver` が何を持つかは型定義に書かれていない。
+T-003 で実際の payload を観測してから確定する。それまでは
+「DM を overlay に流さない」制約を満たせたと見なさない。
+
+**SDK クライアントは会議に participant として参加する**(外から監視する API ではない)。
+参加者リストに 1 人増える。
+
+**検証環境**: まず無料アカウントで試す。Meeting SDK が無料枠で使えるかは未確認のため、
+駄目だった場合は開発者が業務で使っている **Pro プランのアカウント**で検証する。
+どちらで動いたかは T-002 の結果として記録する。
+
+選定の根拠と却下した候補は [docs/research/meeting-sdk-selection.md](../research/meeting-sdk-selection.md)。
 
 ## 表示方式
 

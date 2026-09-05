@@ -12,7 +12,7 @@
 
 | ID | タスク | Plan |
 |---|---|---|
-| T-001 | Meeting SDK を選定する | 001 |
+| T-002 | Zoom チャットを console.log する | 001 |
 | T-004 | Electron 透過オーバーレイが画面共有に映るか検証する | 002 |
 | T-005 | ダミーコメントが流れる静的 HTML | 003 |
 | T-006 | `OverlayComment` 型を定義する | 003 |
@@ -26,7 +26,6 @@ T-012 は T-004 が**失敗した場合にのみ**着手する。成功すれば
 
 | ID | タスク | depends | Plan |
 |---|---|---|---|
-| T-002 | Zoom チャットを console.log する | T-001 | 001 |
 | T-003 | Everyone 宛と DM を判別する | T-002 | 001 |
 | T-007 | `CommentSource` IF と `DebugCommentSource` | T-006 | 003 |
 | T-008 | WebSocket で Node.js → overlay へ配信 | T-005, T-007 | 003 |

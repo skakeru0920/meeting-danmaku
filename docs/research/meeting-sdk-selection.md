@@ -1,0 +1,212 @@
+# 調査: Zoom Meeting SDK の選定
+
+- 日付: 2026-09-05
+- 結論: **Web Meeting SDK(`@zoom/meetingsdk` v6.2.0)の Component View を採用**
+- 関連 Plan: [001](../plan/001-zoom-chat-receive.md)
+- 反映先: [docs/decisions/](../decisions/README.md) の「Zoom チャット受信」節
+
+## 何を決めるための調査か
+
+Zoom ミーティング内の Everyone 宛チャットを受信するために、どの Meeting SDK を
+使うかを決める。ここが決まらないと T-002(チャットを console.log する)に着手できず、
+Phase 0 全体が止まる。
+
+SDK 選定を間違えると大きく手戻りするため、公式ドキュメントと SDK の型定義を
+一次情報として確認する。
+
+## 確認項目
+
+Plan 001 の「検証方法」が列挙した 6 点。候補ごとにこの物差しで測る。
+
+| # | 項目 | なぜ要るか |
+|---|---|---|
+| 1 | chat receive event が取れるか | 必須条件。取れない SDK は選べない |
+| 2 | SDK client は participant として join が必要か / participant list に出るか | 会議に参加者が 1 人増える。この UX が許容できるかの判断材料 |
+| 3 | video / audio off の chat listener 専用で参加できるか | 常時起動させる前提が成り立つか |
+| 4 | 自分がホストの自分のミーティングに必要な token / App 設定 | T-002 の準備手順に直結する |
+| 5 | free アカウントで検証できるか / local development のみで使えるか | 有料契約が要るなら着手前に判断が必要 |
+| 6 | chat callback で Everyone / DM を判別できるか | 必須の制約(DM を overlay に流さない)。T-003 の前提 |
+
+## 候補
+
+Plan 001 の指示により、第一候補は Web Meeting SDK。Web が必須条件を
+満たせないと分かった場合にのみ他を検討する(複数候補を同時に作り込まない)。
+
+| 候補 | 結果 |
+|---|---|
+| **Web Meeting SDK — Component View** | **採用** |
+| Web Meeting SDK — Client View | 却下(同じ SDK 内での選択。理由は後述) |
+| Electron Meeting SDK | 却下 |
+| macOS Meeting SDK | 保留(Web で不足が判明した場合の次点) |
+| Windows / Linux Meeting SDK | 調べなかった。開発機が Mac のため対象外 |
+| Zoom Team Chat / Chatbot API | 調べなかった。Meeting 内チャットとは別物(AGENTS.md の注意事項) |
+
+## 一次ソース
+
+公式ドキュメント。
+
+| URL | 確認日 | 何を確認したか |
+|---|---|---|
+| https://developers.zoom.us/docs/meeting-sdk/ | 2026-09-05 | 対応プラットフォーム一覧、認証方式の概要、ライセンスモデル |
+| https://developers.zoom.us/docs/meeting-sdk/auth/ | 2026-09-05 | SDK JWT の生成方法、ZAK / OBF が要る条件 |
+| https://developers.zoom.us/docs/meeting-sdk/web/ | 2026-09-05 | Client View と Component View の違い |
+| https://developers.zoom.us/docs/meeting-sdk/electron/ | 2026-09-05 | Electron wrapper の位置づけと Zoom 自身の推奨 |
+
+SDK の型定義。**ドキュメントより信頼できる一次情報**として扱った。
+リファレンスページ(`/web/component-view/reference/`)は JavaScript で描画されており
+取得できなかったため、npm パッケージの `.d.ts` を直接読んだ。
+
+| 対象 | 確認日 | 何を確認したか |
+|---|---|---|
+| `@zoom/meetingsdk@6.2.0` の `embedded.d.ts` | 2026-09-05 | Component View のイベント名と payload 型 |
+| `@zoom/meetingsdk@6.2.0` の `index.d.ts` | 2026-09-05 | Client View のイベント名 |
+
+## 各候補の評価
+
+### Web Meeting SDK — Component View — 採用
+
+**1. chat receive event**: 取れる。`client.on('chat-on-message', callback)`。
+型定義では以下のように宣言されている。
+
+```ts
+export declare function event_chat_on_message(payload: ChatRecord | ChatMessage): void;
+function on(event: 'chat-on-message', callback: typeof event_chat_on_message): void;
+```
+
+**6. Everyone / DM の判別**: payload に `receiver` があり、判別できる**見込み**。
+`ChatMessage` の型定義は以下。
+
+```ts
+export interface ChatMessage {
+  id?: string;
+  message: string;
+  sender: { name: string; userId: number; avatar?: string };
+  receiver: { name: string; userId: number };
+  timestamp: number;
+}
+```
+
+必要なフィールド(`sender.name` / `message` / `timestamp` / `receiver`)は揃っている。
+`OverlayComment` へそのまま正規化できる形。
+
+ただし **`receiver` が Everyone 宛のときに何を持つかは型定義に書かれていない。**
+message type の enum も存在しない。送信側 API (`sendChat(message, userId?)`) の
+コメントに「`userId` を渡さなければ everyone に送られる」とあることから、
+Everyone 宛には特別な `userId` が入ると推測されるが、**これは推測であり未確認**。
+実際の payload を T-003 で観測して確定する。
+
+**4. 必要な token と App 設定**: Marketplace で **OAuth アプリ**を作り、
+その **Client ID / Client Secret** で SDK JWT(signature)を生成する。
+Meeting SDK は OAuth アプリの一機能という位置づけ。
+
+ZAK が要るかは用途で変わる。ドキュメントの記載は以下。
+
+- **アプリ所有者のアカウント内**のミーティングに participant として join → **JWT のみ**
+- ミーティングを**開始**する、または**アカウント外**のミーティングに join → ZAK または OBF が必要
+
+今回は「自分のアカウントの自分のミーティングに、SDK クライアントを参加させる」
+構成なので、**JWT のみで足りる**見込み。`JoinOptions` でも `signature` が必須、
+`zak` と `obfToken` は optional になっている。
+
+**2. participant として join が必要か**: 必要。`JoinOptions` が
+`meetingNumber` / `userName` / `signature` を要求しており、SDK クライアント自身が
+会議に参加する設計。**既存の Zoom アプリを外から監視する API ではない。**
+research の初期メモが立てていた仮説どおりだった。
+
+したがって **会議の参加者リストに 1 人増える**。`userName` は指定できるので
+"Comment Overlay" のような名前にはできる。
+
+**3. audio / video off で参加できるか**: `JoinOptions` に audio/video の
+起動可否を直接指定するフィールドは見当たらなかった。ただし Component View は
+表示するコンポーネントを選択できる設計で、`init` 時の設定で制御できる可能性がある。
+**未確認**。T-002 で実機確認する。
+
+### Web Meeting SDK — Client View — 却下
+
+chat イベント自体は存在する。`ZoomMtg.inMeetingServiceListener('onReceiveChatMsg', cb)`。
+
+**却下理由**: **callback が `Function` 型で、payload の型が定義されていない。**
+
+```ts
+function inMeetingServiceListener(event: 'onReceiveChatMsg', callback: Function): void;
+```
+
+Component View の `ChatMessage` / `ChatRecord` に相当する型が Client View には無い。
+payload の構造がドキュメントにも型にも書かれていないため、Everyone / DM の判別に
+何を見ればよいかを事前に読み取れない。同じ SDK で型が付いている選択肢がある以上、
+そちらを採る。
+
+### Electron Meeting SDK — 却下
+
+**却下理由**: Zoom 自身が非推奨としているため。公式ドキュメントの記載は以下。
+
+- macOS / Windows 用 Meeting SDK の上に載る Electron インターフェース層である
+- 「ほとんどの統合では macOS か Windows 用の Meeting SDK を推奨する」
+- 「Electron wrapper はドキュメントと開発者サポートが限られている」
+
+加えて、この選定は overlay を Electron で表示する話(Plan 002)とは**別の判断**。
+overlay 側で Electron を使うことは、チャット受信に Electron Meeting SDK を
+使う理由にはならない。両者は独立している。
+
+### macOS Meeting SDK — 保留
+
+調べなかった。Web で必須条件を満たせる見込みが立ったため、Plan 001 の
+「最も小さく試せる候補から始め、必須条件を満たせないと分かった場合にだけ次へ進む」
+に従って深追いしていない。
+
+Web で行き詰まった場合の次点。native なので raw data アクセスなど機能面では
+上位だが、Node.js 中心で済ませたいという方針からは遠い。
+
+## 採用理由
+
+Web Meeting SDK の Component View を採る理由は 3 つ。
+
+1. **payload に型が付いている。** Client View と違い `ChatMessage` / `ChatRecord` が
+   定義されており、`sender` / `message` / `receiver` / `timestamp` が揃っている。
+   `OverlayComment` への正規化がそのまま書ける
+2. **Mac で最も小さく試せる。** ブラウザで動くため native のビルド環境が要らない。
+   npm パッケージ 1 つで始められる
+3. **Node.js 中心という方針に合う。** 初期メモが「可能なら Web / Node.js 中心で
+   済ませたい」としていた条件を満たす
+
+Electron を却下したのは Zoom 自身が非推奨としているため。macOS native を
+選ばなかったのは、Web で足りる見込みが立った時点で深追いする理由がないため。
+
+## 未確認のまま残したこと
+
+**ドキュメントと型定義を読んだだけでは確定できない項目。** 実機で確かめる。
+
+| 未確認のこと | 確かめる TODO |
+|---|---|
+| Everyone 宛のとき `receiver` に実際に何が入るか。DM とどう違うか | T-003 |
+| `chat-on-message` の payload が `ChatMessage` と `ChatRecord` のどちらで来るか | T-002 |
+| audio / video を off にして chat listener 専用で join できるか | T-002 |
+| SDK クライアントが participant list にどう表示されるか。この UX が許容できるか | T-002 |
+| free アカウントで検証できるか。Meeting SDK が「Zoom のライセンスモデルに従う」としか書かれておらず、無料枠の可否を明記した記述を見つけられなかった | T-002 |
+| Pro アカウントで検証する場合、業務用アカウントに OAuth アプリを作ることになる。組織の Marketplace 設定でアプリ作成が制限されていないか | T-002 |
+| Marketplace への公開・審査なしで local development のみで動くか | T-002 |
+
+**5(free アカウント)について。** 公式に「A paid Zoom account is required」と
+読める記述がある一方、無料アカウントでの可否を明示した箇所は見つけられなかった。
+T-002 の着手時に実際に App を作って確かめる。
+
+ただし**これはプロジェクトのブロッカーではない**。開発者が業務で使っている
+Pro プランのアカウントを持っており、無料アカウントで動かなければそちらで検証できる
+(2026-09-05 に確認)。まず無料アカウントで試し、駄目なら Pro へ切り替える。
+
+Pro を使う場合は業務用アカウント上に OAuth アプリを作ることになるため、
+組織の Marketplace 設定でアプリ作成が制限されていないかを先に確認する。
+
+## 後から見返す人へ
+
+この結論は「**自分のアカウント内の、自分がホストのミーティング**に参加する」
+という前提の上に立っている。以下が変わると結論も変わる。
+
+- **他人がホストのミーティングに対応する場合** — ZAK / OBF が必要になり、
+  さらに 2026-03-02 以降は Marketplace の審査が要るとの記載がある。
+  RTMS という別の選択肢も挙がっているので、そこから調べ直す
+- **raw audio / video が必要になった場合** — Web SDK では扱えない。
+  macOS native SDK の再評価が要る
+- **Google Meet / Teams を追加する場合** — このノートの「確認項目」の 6 項目を
+  そのまま物差しとして使えば横比較できる。特に「SDK クライアント自身が
+  会議に参加する必要があるか」は、プラットフォームによって設計が大きく違う部分

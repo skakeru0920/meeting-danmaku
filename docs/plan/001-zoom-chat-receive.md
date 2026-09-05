@@ -1,7 +1,7 @@
 # Plan 001: Zoom チャットを受信する
 
 - 日付: 2026-09-03
-- 状態: 未着手
+- 状態: 進行中
 - 種別: 検証
 - TODO: T-001, T-002, T-003
 
@@ -75,8 +75,33 @@ Everyone 宛チャットをイベントとして受信でき、sender と messag
 
 ### 結果
 
-(未実施)
+**T-001(SDK 選定)のみ完了。T-002 / T-003 は未実施。**
+
+Web Meeting SDK(`@zoom/meetingsdk` v6.2.0)の Component View を採用した。
+`client.on('chat-on-message', callback)` で受信でき、payload は型定義上
+`sender.name` / `message` / `receiver` / `timestamp` を持つ。
+
+**ただしこれはドキュメントと型定義を読んだ結果であり、実際に動かしていない。**
+仮説そのもの(Everyone 宛チャットを受信できる)は T-002 で検証する。
+
+選定の根拠・却下した候補・一次ソースは
+[docs/research/meeting-sdk-selection.md](../research/meeting-sdk-selection.md)。
 
 ### 分かったこと・後続への影響
 
--
+- **SDK クライアント自身が会議に participant として join する必要がある。**
+  既存の Zoom アプリを外から監視する API ではなかった。初期メモが立てていた
+  仮説どおり。会議の参加者リストに 1 人増えるため、この UX の可否は T-002 で
+  実物を見てから判断する
+- **自分のアカウント内のミーティングなら JWT のみで join できる**見込み。
+  ZAK / OBF は不要。T-002 の準備は Marketplace で OAuth アプリを作り
+  Client ID / Secret を取得するところから始める
+- **Everyone / DM の判別条件はまだ書けない。** `receiver` で判別できる見込みだが、
+  Everyone 宛のときの値が型定義に書かれていない。T-003 で実 payload を見るまで
+  「DM を流さない」制約を満たせたと見なさない
+- **free アカウントで足りるかが未確認のまま残っている。** 公式に有料前提とも
+  読める記述がある一方、無料枠の可否を明示した箇所を見つけられなかった。
+  T-002 の着手時に実際に App を作って確かめる。ただし**ブロッカーではない**。
+  無料で駄目なら業務用の Pro アカウントで検証できる(2026-09-05 に確認)
+- Electron Meeting SDK は Zoom 自身が非推奨としているため却下した。
+  これは overlay を Electron で表示する話(Plan 002)とは独立した判断

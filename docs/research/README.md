@@ -11,6 +11,7 @@
 | ノート | 調査したこと | 結論 |
 |---|---|---|
 | [000-initial-notes](./000-initial-notes.md) | プロジェクト開始時の雑多メモ。要件・疑問点・代替案の一次ソース | 表示方式は Electron 透過ウィンドウを採用(2026-09-04 追記) |
+| [meeting-sdk-selection](./meeting-sdk-selection.md) | Zoom Meeting SDK をどれにするか(Web / Electron / macOS) | Web Meeting SDK の Component View を採用 |
 
 現在有効な結論は [docs/decisions/](../decisions/README.md)、
 作業の詳細は [docs/plan/](../plan/README.md) を見ること。

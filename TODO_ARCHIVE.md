@@ -11,3 +11,4 @@
 | ID | タスク | Plan | 完了日 | 備考 |
 |---|---|---|---|---|
 <!-- ARCHIVE_TOP -->
+| T-001 | Meeting SDK を選定する | 001 | 2026-09-05 | Web Meeting SDK の Component View を採用。根拠は docs/research/meeting-sdk-selection.md |
