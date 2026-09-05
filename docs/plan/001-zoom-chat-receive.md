@@ -1,7 +1,7 @@
 # Plan 001: Zoom チャットを受信する
 
 - 日付: 2026-09-03
-- 状態: 進行中
+- 状態: 完了
 - 種別: 検証
 - TODO: T-001, T-002, T-003
 
@@ -75,14 +75,40 @@ Everyone 宛チャットをイベントとして受信でき、sender と messag
 
 ### 結果
 
-**T-001(SDK 選定)のみ完了。T-002 / T-003 は未実施。**
+**成功。T-001 / T-002 / T-003 すべて完了(2026-09-05)。**
 
-Web Meeting SDK(`@zoom/meetingsdk` v6.2.0)の Component View を採用した。
-`client.on('chat-on-message', callback)` で受信でき、payload は型定義上
-`sender.name` / `message` / `receiver` / `timestamp` を持つ。
+Web Meeting SDK(`@zoom/meetingsdk` v6.2.0)の Component View で、Everyone 宛
+チャットを受信できることを実機で確認した。DM との判別条件も確定した。
 
-**ただしこれはドキュメントと型定義を読んだ結果であり、実際に動かしていない。**
-仮説そのもの(Everyone 宛チャットを受信できる)は T-002 で検証する。
+実際に観測した payload。
+
+```js
+// Everyone 宛
+{
+  id: '1-BFD0A51D-...',
+  message: 'hello',
+  sender:   { name: 'Kakeru', userId: 16778240 },
+  receiver: { name: 'Everyone', userId: 0 },
+  file: { name: '', type: '' },
+  timestamp: 1788618806911,
+}
+
+// DM
+{
+  id: '1-91F0B751-...',
+  message: 'DM from host',
+  sender:   { name: 'Kakeru', userId: 16778240 },
+  receiver: { name: 'Comment Overlay', userId: 16781312 },
+  file: { name: '', type: '' },
+  timestamp: 1788618936303,
+}
+```
+
+**判別条件は `receiver.userId === 0`。** Everyone 宛だけ 0 で、DM は受信者の
+実 userId が入る。`name` は表示言語で変わりうるので使わない。
+
+型定義は `ChatMessage | ChatRecord` の 2 択だったが、**実際に届くのは `ChatRecord`**
+(`file` フィールドを持つ方)だった。
 
 選定の根拠・却下した候補・一次ソースは
 [docs/research/meeting-sdk-selection.md](../research/meeting-sdk-selection.md)。
@@ -99,9 +125,18 @@ Web Meeting SDK(`@zoom/meetingsdk` v6.2.0)の Component View を採用した。
 - **Everyone / DM の判別条件はまだ書けない。** `receiver` で判別できる見込みだが、
   Everyone 宛のときの値が型定義に書かれていない。T-003 で実 payload を見るまで
   「DM を流さない」制約を満たせたと見なさない
-- **free アカウントで足りるかが未確認のまま残っている。** 公式に有料前提とも
-  読める記述がある一方、無料枠の可否を明示した箇所を見つけられなかった。
-  T-002 の着手時に実際に App を作って確かめる。ただし**ブロッカーではない**。
-  無料で駄目なら業務用の Pro アカウントで検証できる(2026-09-05 に確認)
+- **無料アカウントで動作した。** Meeting SDK の利用に有料プランは要らなかった。
+  Pro への切り替えは不要
+- **React 18.2.0 が必須だった。** SDK の peerDependencies が範囲指定ではなく
+  固定版を要求する。React 19 では `ReactCurrentOwner` の削除で実行時エラーになる。
+  Vite でバンドルする構成にしたので、この固定は今後も効く
+- **署名の payload から `sdkKey` を外す必要があった。** v5.0.0 以降 deprecated で、
+  入れると警告が出る。`appKey` のみでよい
+- **PMI(パーソナルミーティングルーム)はホストが開始するまで join できない。**
+  `role: 0` で参加するため。errorCode 3008 / `Meeting has not started` が返る
+- **SDK クライアントのマイクを OFF にできなかった。** `client.stopAudio()` を
+  join 後に呼んでも、参加者リスト上は ON のままだった。カメラは最初から OFF。
+  何も喋らなければ実害が出ないため Icebox へ送ったが、**発表者と同じ Mac で
+  動かすとハウリングの恐れがある**。T-011 の前に決着させる
 - Electron Meeting SDK は Zoom 自身が非推奨としているため却下した。
   これは overlay を Electron で表示する話(Plan 002)とは独立した判断

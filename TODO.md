@@ -12,7 +12,6 @@
 
 | ID | タスク | Plan |
 |---|---|---|
-| T-002 | Zoom チャットを console.log する | 001 |
 | T-004 | Electron 透過オーバーレイが画面共有に映るか検証する | 002 |
 | T-005 | ダミーコメントが流れる静的 HTML | 003 |
 | T-006 | `OverlayComment` 型を定義する | 003 |
@@ -26,11 +25,10 @@ T-012 は T-004 が**失敗した場合にのみ**着手する。成功すれば
 
 | ID | タスク | depends | Plan |
 |---|---|---|---|
-| T-003 | Everyone 宛と DM を判別する | T-002 | 001 |
 | T-007 | `CommentSource` IF と `DebugCommentSource` | T-006 | 003 |
 | T-008 | WebSocket で Node.js → overlay へ配信 | T-005, T-007 | 003 |
 | T-009 | dev-only の `/debug` 投稿画面 | T-008 | 003 |
-| T-010 | `ZoomCommentSource` を overlay に接続する | T-003, T-009 | 004 |
+| T-010 | `ZoomCommentSource` を overlay に接続する | T-009 | 004 |
 | T-011 | 実際の画面共有で通しで確認する | T-004, T-010 | 004 |
 | T-012 | OBS Browser Source 経由の表示を用意する | T-004 | 004 |
 
@@ -40,5 +38,6 @@ T-012 は T-004 が**失敗した場合にのみ**着手する。成功すれば
 
 | タスク | メモ |
 |---|---|
+| SDK クライアントのマイクを OFF にする | `client.stopAudio()` を呼んでも参加者リスト上は ON のまま。何も喋らなければ実害なしと判断し保留。発表者と同じ Mac で動かすとハウリングの恐れがあるので T-011 の前に決着させる |
 | multi monitor 対応 | docs/research/ が未検討として残している |
 | Keynote フルスクリーン対応 | T-004 の任意条件。満たせなければ将来機能として切る |

@@ -9,7 +9,7 @@
 
 | # | Plan | 種別 | 状態 | TODO |
 |---|---|---|---|---|
-| 001 | [Zoom チャットを受信する](./001-zoom-chat-receive.md) | 検証 | 進行中 | T-001〜T-003 |
+| 001 | [Zoom チャットを受信する](./001-zoom-chat-receive.md) | 検証 | **完了** | T-001〜T-003 |
 | 002 | [Electron 透過オーバーレイが画面共有に映るか](./002-electron-overlay-on-screen-share.md) | 検証 | 未着手 | T-004 |
 | 003 | [Zoom 抜きでコメントが流れる状態を作る](./003-overlay-with-debug-source.md) | 実装 | 未着手 | T-005〜T-009 |
 | 004 | [Zoom チャットを画面共有に流す](./004-zoom-to-overlay-end-to-end.md) | 実装 | 未着手 | T-010〜T-012 |

@@ -16,26 +16,49 @@
 
 **採用**: Web Meeting SDK(`@zoom/meetingsdk`)の **Component View**。
 
-- バージョン: v6.2.0(2026-09-05 時点の最新。**動作は未検証**)
+- バージョン: v6.2.0(2026-09-05 に実機で受信を確認)
 - チャット受信: `client.on('chat-on-message', callback)`
 - payload 型: `ChatMessage | ChatRecord`。`sender.name` / `message` /
   `receiver` / `timestamp` を持つ
 
-**認証構成**: Marketplace の **OAuth アプリ**を作り、その Client ID / Client Secret で
-SDK JWT(signature)を生成する。自分のアカウント内のミーティングへ participant として
-join する場合は **JWT のみでよく、ZAK / OBF は不要**(公式ドキュメントの記載)。
+**認証構成**: Marketplace で **General App** を作り、**Features > Embed で
+Meeting SDK を有効化**する。その Client ID / Client Secret で SDK JWT(signature)を
+生成する。自分のアカウント内のミーティングへ participant として join する場合は
+**JWT のみでよく、ZAK / OBF は不要**(実機で確認)。
 
-**Everyone 宛と DM の判別条件**: **未確定。** payload の `receiver` で判別できる
-見込みだが、Everyone 宛のときに `receiver` が何を持つかは型定義に書かれていない。
-T-003 で実際の payload を観測してから確定する。それまでは
-「DM を overlay に流さない」制約を満たせたと見なさない。
+- 署名の payload は `appKey` / `mn` / `role: 0` / `iat` / `exp` / `tokenExp`。
+  `sdkKey` は v5.0.0 以降 deprecated なので入れない
+- 署名は**必ずサーバー側で作る**。Client Secret をブラウザへ出さない
+- 旧来の SDK Key / Secret は 2026-06-27 に Client ID / Secret へ移行が強制済み
+
+**React 18.2.0 が必須。** SDK の peerDependencies が範囲指定ではなく固定版を要求する。
+React 19 では `ReactCurrentOwner` の削除により実行時エラーになる
+(`redux@4.2.1` / `react-redux@8.1.2` / `redux-thunk@2.4.2` も同様に固定)。
+
+**Everyone 宛と DM の判別条件**: **確定**(T-003 で実 payload を観測)。
+
+```js
+const isToEveryone = (payload) => payload.receiver.userId === 0;
+```
+
+Everyone 宛は `receiver.userId === 0`(`name` は `"Everyone"`)、
+DM は受信者の実 userId が入る。実測値は以下。
+
+| | receiver.name | receiver.userId |
+|---|---|---|
+| Everyone 宛 | `"Everyone"` | `0` |
+| DM | `"Comment Overlay"`(受信者名) | `16781312` |
+
+**`name` で判別しない。** 表示言語によって変わる可能性があるため、数値で判定する。
+
+実 payload は型定義の `ChatRecord`(`file` フィールドを持つ方)で届く。
 
 **SDK クライアントは会議に participant として参加する**(外から監視する API ではない)。
-参加者リストに 1 人増える。
+参加者リストに 1 人増える(名前は `userName` で指定。カメラ OFF、**マイクは ON のまま**)。
+マイクを切る方法は未解決で Icebox にある。
 
-**検証環境**: まず無料アカウントで試す。Meeting SDK が無料枠で使えるかは未確認のため、
-駄目だった場合は開発者が業務で使っている **Pro プランのアカウント**で検証する。
-どちらで動いたかは T-002 の結果として記録する。
+**検証環境**: **無料アカウントで動作した**(2026-09-05 に確認)。
+Meeting SDK の利用に有料プランは要らない。Pro への切り替えは不要。
 
 **ボット利用の制約**: Meeting SDK は install 時に「ボットや AI ノートテイカーは
 サポートしない」と警告するが、**禁止ではない**(審査要件に「ボットとして参加するなら
