@@ -134,8 +134,11 @@ Web Meeting SDK(`@zoom/meetingsdk` v6.2.0)の Component View で、Everyone 宛
   入れると警告が出る。`appKey` のみでよい
 - **PMI(パーソナルミーティングルーム)はホストが開始するまで join できない。**
   `role: 0` で参加するため。errorCode 3008 / `Meeting has not started` が返る
-- **SDK クライアントのマイクを OFF にできなかった。** `client.stopAudio()` を
-  join 後に呼んでも、参加者リスト上は ON のままだった。カメラは最初から OFF。
+- **SDK クライアントのマイクを OFF にできなかった。** `client.stopAudio()` は
+  成功するが、参加者リスト上は ON のままだった。カメラは最初から OFF。
+  待機室にいると 5004 / `on hold` で失敗するが、待機室を無効にして成功させても
+  結果は変わらなかったので**待機室は原因ではない**。`stopAudio` が音声接続の停止で
+  あってミュートとは別の概念らしい。次に試すなら `client.mute(true)`。
   何も喋らなければ実害が出ないため Icebox へ送ったが、**発表者と同じ Mac で
   動かすとハウリングの恐れがある**。T-011 の前に決着させる
 - Electron Meeting SDK は Zoom 自身が非推奨としているため却下した。

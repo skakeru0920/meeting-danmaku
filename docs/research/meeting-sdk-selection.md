@@ -262,7 +262,7 @@ Electron を却下したのは Zoom 自身が非推奨としているため。ma
 |---|---|
 | Everyone 宛のとき `receiver` に何が入るか | `{ name: 'Everyone', userId: 0 }`。DM は受信者の実 userId。判別は **`receiver.userId === 0`** |
 | payload が `ChatMessage` と `ChatRecord` のどちらで来るか | **`ChatRecord`**(`file` フィールドを持つ方) |
-| audio / video を off にできるか | video は最初から OFF。**audio は切れなかった**。`client.stopAudio()` を呼んでも参加者リスト上は ON のまま(Icebox 送り) |
+| audio / video を off にできるか | video は最初から OFF。**audio は切れなかった**。`client.stopAudio()` は成功するが参加者リスト上は ON のまま。待機室は原因ではない(無効にしても同じ)。Icebox 送り |
 | participant list にどう表示されるか | `userName` で指定した名前(`Comment Overlay`)で 1 人増える。カメラ OFF |
 | free アカウントで検証できるか | **できた。** 有料プランは不要 |
 | 審査・公開なしで local development で動くか | **動いた。** General App を作り Embed で Meeting SDK を有効化するだけで足りる |
