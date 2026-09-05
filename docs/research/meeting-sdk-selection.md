@@ -39,6 +39,7 @@ Plan 001 の指示により、第一候補は Web Meeting SDK。Web が必須条
 | Electron Meeting SDK | 却下 |
 | macOS Meeting SDK | 保留(Web で不足が判明した場合の次点) |
 | Windows / Linux Meeting SDK | 調べなかった。開発機が Mac のため対象外 |
+| RTMS(Realtime Media Streams) | 却下(有料。ただし有力な代替案) |
 | Webhook Only App(Meeting webhook) | 却下 |
 | Zoom Team Chat / Chatbot API | 調べなかった。Meeting 内チャットとは別物(AGENTS.md の注意事項) |
 
@@ -53,6 +54,9 @@ Plan 001 の指示により、第一候補は Web Meeting SDK。Web が必須条
 | https://developers.zoom.us/docs/meeting-sdk/web/ | 2026-09-05 | Client View と Component View の違い |
 | https://developers.zoom.us/docs/meeting-sdk/electron/ | 2026-09-05 | Electron wrapper の位置づけと Zoom 自身の推奨 |
 | https://developers.zoom.us/docs/api/meetings/events/ | 2026-09-05 | Meeting webhook のイベント一覧。チャット本文の配信が無いこと |
+| https://developers.zoom.us/docs/rtms/ | 2026-09-05 | RTMS の概要。クレジットが必要なこと |
+| https://developers.zoom.us/docs/rtms/event-reference/ | 2026-09-05 | RTMS が chat を扱えること |
+| https://developers.zoom.us/docs/distribute/sdk-feature-review-requirements/ | 2026-09-05 | ボット参加の扱いと審査が必要になる条件 |
 
 SDK の型定義。**ドキュメントより信頼できる一次情報**として扱った。
 リファレンスページ(`/web/component-view/reference/`)は JavaScript で描画されており
@@ -138,6 +142,27 @@ payload の構造がドキュメントにも型にも書かれていないため
 何を見ればよいかを事前に読み取れない。同じ SDK で型が付いている選択肢がある以上、
 そちらを採る。
 
+### RTMS(Realtime Media Streams)— 却下。ただし有力な代替案
+
+Zoom が提供するデータパイプライン。会議に参加者を増やさずに、音声・映像・
+文字起こし・**チャット**を受け取れる。ボットや AI ノートテイカー向けの正規ルート。
+
+**チャットに対応している。** イベントリファレンスに chat が含まれ、payload には
+sender / receiver / timestamp / 本文が含まれる。本プロジェクトの要件は満たす。
+
+**却下理由: アカウントクレジット(有料)が必要なため。**
+MVP の検証段階で課金を発生させるのは Lean の方針に反する。
+
+加えて Webhook + WebSocket のサーバー構成が要り、Meeting SDK(npm パッケージ 1 つ)
+より重い。
+
+**ただし以下の条件が来たら再評価する価値がある。**
+
+- **参加者が 1 人増える UX が許容できないと分かったとき**(T-002 で判断)。
+  RTMS なら参加者が増えない。これは Meeting SDK に対する明確な優位点
+- 他人のアカウントの会議に対応する必要が出たとき
+- チャット以外(音声・画面共有・文字起こし)も扱いたくなったとき
+
 ### Webhook Only App(Meeting webhook)— 却下
 
 SDK を使わず、Zoom から自前サーバーへ HTTP POST を受ける方式。
@@ -181,6 +206,37 @@ overlay 側で Electron を使うことは、チャット受信に Electron Meet
 Web で行き詰まった場合の次点。native なので raw data アクセスなど機能面では
 上位だが、Node.js 中心で済ませたいという方針からは遠い。
 
+## ボット利用に関する制約(重要)
+
+`@zoom/meetingsdk` は **npm install 時に以下の警告を出す**。
+
+> The Meeting SDK is reserved for human use cases and does not support bots or
+> AI notetakers. To build an AI notetaker application or access realtime media,
+> use Zoom RTMS (Real-time media streams)
+
+本プロジェクトの SDK クライアントは、誰も操作せずチャットを受信し続ける
+常駐参加者であり、**形態としてはボットに近い**。この警告が規約上の禁止に
+あたるかを確認した。
+
+**結論: 禁止ではない。自分のアカウント内の会議に限れば審査も不要。**
+
+根拠は Meeting SDK の審査要件の記述。
+
+> call out if the SDK app joins meetings as a bot participant
+
+**「ボットとして参加するなら申告せよ」**という書き方であり、禁止ではない。
+禁止なら申告項目を設ける必要がない。審査が要るのは以下の場合。
+
+> Apps will need to go through our App Review process to join Meetings
+> **outside their own account**
+
+本プロジェクトは自分のアカウント内の会議のみを対象とするため、審査は不要。
+postinstall の警告は「サポート窓口の対象外・非推奨」の意味と解釈し、
+RTMS へ誘導する意図が強いと判断した。
+
+**この判断が変わる条件**: 他人のアカウントの会議に対応する場合は審査が必要になる。
+そのときは RTMS の再評価も含めて選定をやり直す。
+
 ## 採用理由
 
 Web Meeting SDK の Component View を採る理由は 3 つ。
@@ -205,7 +261,7 @@ Electron を却下したのは Zoom 自身が非推奨としているため。ma
 | Everyone 宛のとき `receiver` に実際に何が入るか。DM とどう違うか | T-003 |
 | `chat-on-message` の payload が `ChatMessage` と `ChatRecord` のどちらで来るか | T-002 |
 | audio / video を off にして chat listener 専用で join できるか | T-002 |
-| SDK クライアントが participant list にどう表示されるか。この UX が許容できるか | T-002 |
+| SDK クライアントが participant list にどう表示されるか。この UX が許容できるか。**許容できない場合は RTMS の再評価が要る** | T-002 |
 | free アカウントで検証できるか。Meeting SDK が「Zoom のライセンスモデルに従う」としか書かれておらず、無料枠の可否を明記した記述を見つけられなかった | T-002 |
 | Pro アカウントで検証する場合、業務用アカウントに OAuth アプリを作ることになる。組織の Marketplace 設定でアプリ作成が制限されていないか | T-002 |
 | Marketplace への公開・審査なしで local development のみで動くか | T-002 |
