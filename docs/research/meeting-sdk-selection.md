@@ -39,6 +39,7 @@ Plan 001 の指示により、第一候補は Web Meeting SDK。Web が必須条
 | Electron Meeting SDK | 却下 |
 | macOS Meeting SDK | 保留(Web で不足が判明した場合の次点) |
 | Windows / Linux Meeting SDK | 調べなかった。開発機が Mac のため対象外 |
+| Webhook Only App(Meeting webhook) | 却下 |
 | Zoom Team Chat / Chatbot API | 調べなかった。Meeting 内チャットとは別物(AGENTS.md の注意事項) |
 
 ## 一次ソース
@@ -51,6 +52,7 @@ Plan 001 の指示により、第一候補は Web Meeting SDK。Web が必須条
 | https://developers.zoom.us/docs/meeting-sdk/auth/ | 2026-09-05 | SDK JWT の生成方法、ZAK / OBF が要る条件 |
 | https://developers.zoom.us/docs/meeting-sdk/web/ | 2026-09-05 | Client View と Component View の違い |
 | https://developers.zoom.us/docs/meeting-sdk/electron/ | 2026-09-05 | Electron wrapper の位置づけと Zoom 自身の推奨 |
+| https://developers.zoom.us/docs/api/meetings/events/ | 2026-09-05 | Meeting webhook のイベント一覧。チャット本文の配信が無いこと |
 
 SDK の型定義。**ドキュメントより信頼できる一次情報**として扱った。
 リファレンスページ(`/web/component-view/reference/`)は JavaScript で描画されており
@@ -135,6 +137,28 @@ Component View の `ChatMessage` / `ChatRecord` に相当する型が Client Vie
 payload の構造がドキュメントにも型にも書かれていないため、Everyone / DM の判別に
 何を見ればよいかを事前に読み取れない。同じ SDK で型が付いている選択肢がある以上、
 そちらを採る。
+
+### Webhook Only App(Meeting webhook)— 却下
+
+SDK を使わず、Zoom から自前サーバーへ HTTP POST を受ける方式。
+SDK クライアントを会議に参加させずに済むため、参加者が 1 人増える問題を
+回避できる可能性があった。
+
+**却下理由: Meeting 内チャットの本文を配信する webhook が存在しない。**
+
+Meeting webhook のイベント一覧を確認したところ、提供されているのは
+参加・退出・録画完了などのライフサイクル系イベントのみだった。
+チャット関連は `webinar.chat_message_file_downloaded` があるが、これは
+webinar のチャットで共有されたファイルがダウンロードされたときに発火し、
+**ファイルのメタデータのみでメッセージ本文は含まない**。
+
+副次的な理由として、webhook は Zoom 側から POST が飛ぶため
+**公開された HTTPS エンドポイントが要る**。localhost では受けられず、
+トンネリング(ngrok 等)が必要になって MVP の構成が重くなる。
+Meeting SDK ならブラウザ側で完結する。
+
+なお Chatbot webhook は存在するが、これは Zoom Team Chat 用であり
+Meeting 内チャットとは別物。
 
 ### Electron Meeting SDK — 却下
 
