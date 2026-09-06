@@ -137,8 +137,14 @@ app.listen(PORT, () => {
   console.log(`signature server: http://localhost:${PORT}`);
   console.log(`ミーティング番号: ${ZOOM_MEETING_NUMBER}`);
 
-  // T-008 の間はダミーを流し続ける。T-010 で ZoomCommentSource に差し替える。
-  const source = new DebugCommentSource();
-  source.start((comment) => broadcaster.broadcast(comment));
-  console.log('DebugCommentSource を開始した');
+  // ダミーの自動投稿は --debug-source を付けたときだけ。
+  //
+  // 既定では止めている。実際の Zoom コメントを確認するときに混ざると
+  // 見分けがつかないため。見た目の調整をするときに付ける。
+  // 手動投稿は /src/debug/ から行える(フラグに関係なく使える)。
+  if (process.argv.includes('--debug-source')) {
+    const source = new DebugCommentSource();
+    source.start((comment) => broadcaster.broadcast(comment));
+    console.log('DebugCommentSource を開始した(--debug-source)');
+  }
 });

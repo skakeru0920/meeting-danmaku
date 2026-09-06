@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <title>T-002: Zoom チャット受信の検証</title>
+    <title>Zoom チャット → overlay</title>
     <style>
       body {
         font-family: system-ui, sans-serif;
@@ -25,10 +25,25 @@
         border-bottom: 1px solid #ddd;
         padding: 0.5rem 0;
       }
+      .note {
+        color: #555;
+        font-size: 0.875rem;
+      }
+      .entry[data-kind='skipped'] {
+        color: #999;
+      }
+      .entry[data-kind='error'] {
+        color: #b91c1c;
+      }
     </style>
   </head>
   <body>
     <div id="status">読み込み中…</div>
+
+    <p class="note">
+      このタブを開いている間だけコメントが流れる。閉じると止まる。
+      <a href="/src/overlay/" target="_blank" rel="noreferrer">overlay を開く</a>
+    </p>
 
     <!-- Meeting SDK がここへ描画する。join するまでは表示されない -->
     <div id="meetingSDKElement"></div>

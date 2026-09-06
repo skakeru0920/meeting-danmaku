@@ -11,6 +11,7 @@
     "dev": "concurrently -n server,vite -c blue,green \"npm:dev:server\" \"npm:dev:vite\"",
     "dev:server": "node src/server/index.js",
     "dev:vite": "vite",
+    "dev:dummy": "concurrently -n server,vite -c blue,green \"node src/server/index.js --debug-source\" \"npm:dev:vite\"",
     "typecheck": "tsc -p jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
