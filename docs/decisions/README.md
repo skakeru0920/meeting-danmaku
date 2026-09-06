@@ -114,7 +114,12 @@ win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 表示方式は Electron 単体に確定したが(上の「表示方式」)、overlay は
 ブラウザで開いても同じように動く状態を保つ。開発中の確認がしやすい。
 
-Zoom 接続なしでコメントを投げられる dev-only の `/debug` 画面を用意する。
+Zoom 接続なしでコメントを投げられる dev-only の `/debug` 画面がある
+(`http://localhost:5173/src/debug/`)。`POST /comment` で投稿する。
+**認証は付けていないので開発機の外へ公開しない。**
+
+**XSS の防御は overlay の `textContent` 一箇所に集約する。** 投稿経路の途中で
+エスケープしない。サーバーでエスケープすると画面に `&lt;script&gt;` が出る。
 
 初期値: コメント表示時間 8 秒固定、同時表示上限 20、レーンは round-robin。
 
