@@ -7,7 +7,7 @@
 
 /* レーン 1 本の高さ。danmaku.js の LANE_HEIGHT と合わせる */
 :root {
-  --lane-height: 48px;
+  --lane-height: 96px;
 }
 
 /*
@@ -42,15 +42,16 @@ body {
   line-height: var(--lane-height);
 
   font-family: system-ui, sans-serif;
-  font-size: 32px;
+  /* レーン高さの 2/3。大きくするときは --lane-height も一緒に上げる */
+  font-size: 64px;
   font-weight: bold;
   color: #fff;
-  /* 明るい画面の上でも読めるように縁取りする */
+  /* 明るい画面の上でも読めるように縁取りする。文字を大きくしたぶん太くする */
   text-shadow:
-    -2px -2px 0 #000,
-    2px -2px 0 #000,
-    -2px 2px 0 #000,
-    2px 2px 0 #000;
+    -4px -4px 0 #000,
+    4px -4px 0 #000,
+    -4px 4px 0 #000,
+    4px 4px 0 #000;
 
   /* 移動距離は幅を実測してから JS が --travel に入れる */
   animation-name: flow;

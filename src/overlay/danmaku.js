@@ -6,7 +6,15 @@ import { LaneAllocator, countLanes } from './lane.js';
 export const DURATION_SECONDS = 8;
 
 /** レーン 1 本の高さ(px)。CSS の --lane-height と合わせる */
-export const LANE_HEIGHT = 48;
+export const LANE_HEIGHT = 96;
+
+/**
+ * 画面上端に空けるレーン数。
+ *
+ * 1 本空けて 2 レーン目から流す。macOS のメニューバーや Zoom のツールバーと
+ * 重なる位置なので、そのまま使うと読みにくい。
+ */
+export const TOP_OFFSET_LANES = 1;
 
 /**
  * コメントを画面へ流す。
@@ -24,7 +32,11 @@ export class Danmaku {
     this.stage = stage;
 
     const viewportHeight = options.viewportHeight ?? window.innerHeight;
-    this.allocator = new LaneAllocator(countLanes(viewportHeight, LANE_HEIGHT));
+
+    // 上端に空けるぶんを引いてから数える。引かないと最後のレーンが
+    // 画面の下へはみ出す。
+    const usableHeight = viewportHeight - TOP_OFFSET_LANES * LANE_HEIGHT;
+    this.allocator = new LaneAllocator(countLanes(usableHeight, LANE_HEIGHT));
   }
 
   /**
@@ -72,7 +84,7 @@ export class Danmaku {
     // T-009 で /debug から任意の文字列が入るため、ここは最初からこの形にする。
     el.textContent = comment.text;
 
-    el.style.top = `${lane * LANE_HEIGHT}px`;
+    el.style.top = `${(lane + TOP_OFFSET_LANES) * LANE_HEIGHT}px`;
     el.style.animationDuration = `${DURATION_SECONDS}s`;
 
     return el;

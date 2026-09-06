@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Danmaku, LANE_HEIGHT, DURATION_SECONDS } from './danmaku.js';
+import { Danmaku, LANE_HEIGHT, DURATION_SECONDS, TOP_OFFSET_LANES } from './danmaku.js';
 
 /** @typedef {import('./types.js').OverlayComment} OverlayComment */
 
@@ -44,9 +44,41 @@ describe('Danmaku', () => {
     danmaku.push(makeComment({ id: 'c1' }));
     danmaku.push(makeComment({ id: 'c2' }));
 
+    // 画面上端は TOP_OFFSET_LANES ぶん空ける。1 本目はその次から
     const comments = stage.querySelectorAll('.comment');
-    expect(/** @type {HTMLElement} */ (comments[0]).style.top).toBe('0px');
-    expect(/** @type {HTMLElement} */ (comments[1]).style.top).toBe(`${LANE_HEIGHT}px`);
+    expect(/** @type {HTMLElement} */ (comments[0]).style.top).toBe(
+      `${TOP_OFFSET_LANES * LANE_HEIGHT}px`,
+    );
+    expect(/** @type {HTMLElement} */ (comments[1]).style.top).toBe(
+      `${(TOP_OFFSET_LANES + 1) * LANE_HEIGHT}px`,
+    );
+  });
+
+  it('最上段は空ける', () => {
+    // メニューバーや Zoom のツールバーと重なる位置なので使わない
+    const danmaku = new Danmaku(stage, { viewportHeight: 1000 });
+
+    danmaku.push(makeComment({ id: 'c1' }));
+
+    const first = /** @type {HTMLElement} */ (stage.querySelector('.comment'));
+    expect(first.style.top).not.toBe('0px');
+  });
+
+  it('最後のレーンが画面からはみ出さない', () => {
+    const viewportHeight = 1000;
+    const danmaku = new Danmaku(stage, { viewportHeight });
+
+    // レーンを一巡させて、最も下に来るものを見る
+    const laneCount = danmaku.allocator.laneCount;
+    for (let i = 0; i < laneCount; i += 1) {
+      danmaku.push(makeComment({ id: `c${i}` }));
+    }
+
+    const tops = [...stage.querySelectorAll('.comment')].map((el) =>
+      Number.parseInt(/** @type {HTMLElement} */ (el).style.top, 10),
+    );
+
+    expect(Math.max(...tops) + LANE_HEIGHT).toBeLessThanOrEqual(viewportHeight);
   });
 
   it('表示時間は 8 秒', () => {
