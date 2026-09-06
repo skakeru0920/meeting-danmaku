@@ -15,7 +15,7 @@
     "typecheck": "tsc -p jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "electron:spike": "env -u ELECTRON_RUN_AS_NODE electron src/electron/main.js"
+    "overlay": "env -u ELECTRON_RUN_AS_NODE electron src/electron/main.js"
   },
   "license": "UNLICENSED",
   "dependencies": {

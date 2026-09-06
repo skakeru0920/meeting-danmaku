@@ -178,20 +178,24 @@ T-010(Plan 004)で、そのときも overlay と SSE の部分は変わらない
 チャットを投稿すると payload が流れる。Everyone 宛と DM の判別は
 `receiver.userId === 0`(0 が Everyone)。
 
-### Electron オーバーレイ(T-004 の検証用)
+### Electron オーバーレイ
 
 ```bash
-npm run electron:spike            # 弾幕だけ
-npm run electron:spike -- --frame # 赤枠と説明ラベルも出す(切り分け用)
+npm run dev      # 先に起動しておく(overlay は Vite が配信する)
+npm run overlay  # 別のターミナルで
 ```
 
 デスクトップ全体に透過ウィンドウを重ねる。終了は起動したターミナルで Ctrl+C。
 
+**`npm run dev` を先に起動すること。** overlay は
+`http://localhost:5173/src/overlay/` を読む。ブラウザで開くのと同じものが
+動くので、見た目の調整はブラウザで行える。別ポートで動かしているときは
+`OVERLAY_URL` で上書きする。
+
 主ディスプレイにのみ表示する。**Zoom で共有するときは主ディスプレイを選ぶこと。**
 複数ディスプレイ対応は TODO.md の Icebox にある。
 
-`npm run` 経由で引数を渡すには `--` が要る。
-また、この環境には `ELECTRON_RUN_AS_NODE=1` が設定されているため、
+この環境には `ELECTRON_RUN_AS_NODE=1` が設定されているため、
 `npx electron` を直接叩くと GUI にならない。必ずこのスクリプトを使う。
 
 ### テストと型検査

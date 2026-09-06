@@ -119,7 +119,12 @@ win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 表示先の切り替えは TODO.md の Icebox にある。
 
 この環境には `ELECTRON_RUN_AS_NODE=1` が設定されており、そのまま `electron` を
-起動すると GUI にならない。`npm run electron:spike` が `env -u` で打ち消している。
+起動すると GUI にならない。`npm run overlay` が `env -u` で打ち消している。
+
+**overlay は Vite が配信するものを URL で読む**(`http://localhost:5173/src/overlay/`)。
+`file://` で直接開くと SSE の接続先(相対パスの `/events`)が解決できないため。
+ブラウザで開くのと同じものが動くので、表示先による差異が出ない。
+**`npm run dev` を先に起動しておく必要がある。**
 
 ## overlay の実装
 

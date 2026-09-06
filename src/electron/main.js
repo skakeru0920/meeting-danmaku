@@ -1,33 +1,34 @@
 /**
- * T-004 の検証用 Electron アプリ(Plan 002)。
+ * overlay を表示する Electron アプリ。
  *
- * 透過・クリック透過・常時最前面のウィンドウを作り、
- * (1) 全アプリの手前に出るか
- * (2) Zoom のデスクトップ全体共有を通して別 participant に見えるか
- * (3) Keynote 再生モードの上にも出るか
- * を確かめる。
+ * 透過・クリック透過・常時最前面のウィンドウに src/overlay/ を載せる。
+ * 画面共有を通して別 participant にも見える(T-004 で確認済み)。
  *
- * **src/overlay/ は読み込まない。** 本実装(Plan 003)とは切り離す。
- * overlay を載せてしまうと、映らなかったときに Electron の問題か
- * overlay の問題かを切り分けられないため、ここは最小構成で試す。
+ * **overlay は Vite が配信するものを URL で読む。** ブラウザで開くのと
+ * 同じものが動くので、「ブラウザでは動くが Electron では動かない」差異が
+ * 起きない(docs/decisions/ の「表示先に依存する処理を持ち込まない」)。
+ * そのため **`npm run dev` を先に起動しておく必要がある。**
  */
 
 // electron は CommonJS なので名前付き import ができない。
 // default を受けて分解する(`import { app } from 'electron'` は
 // SyntaxError: does not provide an export named 'app' になる)。
 //
-// 起動は `npm run electron:spike` を使うこと。この環境には
+// 起動は `npm run overlay` を使うこと。この環境には
 // ELECTRON_RUN_AS_NODE=1 が設定されていて、そのまま electron を起動すると
 // GUI ではなく素の Node として立ち上がる。すると electron が返すのは
 // バイナリのパス(文字列)で、app も BrowserWindow も undefined になる。
 // スクリプト側で env -u して打ち消している。
 import electron from 'electron';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const { app, BrowserWindow, screen } = electron;
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+/**
+ * overlay の配信元。Vite の dev サーバー。
+ *
+ * 別ポートで動かしているときは OVERLAY_URL で上書きする。
+ */
+const OVERLAY_URL = process.env.OVERLAY_URL ?? 'http://localhost:5173/src/overlay/';
 
 /** @type {BrowserWindow | null} */
 let overlayWindow = null;
@@ -87,12 +88,15 @@ function createOverlayWindow() {
   // 別の Space へ移っても追従させ、フルスクリーンの上にも出す
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-  // 赤枠と説明ラベルは検証用の目印。既定では出さない。
-  // 切り分けが要るときだけ `npm run electron:spike -- --frame` で出す。
-  const showFrame = process.argv.includes('--frame');
+  // Vite が配信する overlay を読む。file:// で直接開くと SSE の接続先
+  // (相対パスの /events)が解決できないので URL で読む。
+  overlayWindow.loadURL(OVERLAY_URL);
 
-  overlayWindow.loadFile(path.join(__dirname, 'index.html'), {
-    query: { frame: showFrame ? '1' : '0' },
+  // 読めなかったときに無言で真っ白にならないようにする。
+  // 起こりやすいのは dev サーバーが立っていないケース。
+  overlayWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    console.error(`overlay を読めなかった: ${errorDescription} (${errorCode})`);
+    console.error(`${OVERLAY_URL} を開けるか確認する。npm run dev は起動しているか?`);
   });
 }
 
