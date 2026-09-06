@@ -41,7 +41,7 @@ overlay の HTML / CSS / JS は両方式で共用する。
 | Phase | ゴール | 状態 |
 |---|---|---|
 | 1 | Zoom chat → terminal に `console.log` | **完了**(Plan 001) |
-| 2 | debug message → browser overlay | 進行中(Plan 003。T-005 / T-006 完了) |
+| 2 | debug message → browser overlay | 進行中(Plan 003。残りは T-008 / T-009) |
 | 3 | Zoom chat → overlay | 未着手(Plan 004) |
 | 4 | Zoom chat → 画面共有(Electron または OBS) | 未着手(Plan 002 / 004) |
 
@@ -157,7 +157,7 @@ Vite(5173)と署名サーバー(3000)が同時に立つ。画面は 2 つある�
 | URL | 中身 |
 |---|---|
 | http://localhost:5173/src/zoom/ | Zoom SDK クライアント。チャットの payload を出す |
-| http://localhost:5173/src/overlay/ | overlay。いまはダミーコメントが流れる(T-005) |
+| http://localhost:5173/src/overlay/ | overlay。いまは DebugCommentSource のダミーが流れる |
 
 Zoom 側を開くと、SDK が `Comment Overlay` という名前で会議に参加し、
 受信したチャットの payload を画面と console に出す。

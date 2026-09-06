@@ -74,6 +74,28 @@ overlay は Vanilla JS のままにしたいので `.ts` へは移行せず、`j
 **完了条件**: `DebugCommentSource` を start すると callback へ `OverlayComment` が
 届くことを console で確認できる。stop すると止まる。
 
+**結果**(2026-09-06): 完了。`src/overlay/source.js` に置いた。
+Node で実行して console に確認済み。
+
+```text
+--- start ---
+received: {"id":"debug-0","sender":"user0","text":"こんにちは","timestamp":...}
+received: {"id":"debug-1","sender":"user1","text":"888888","timestamp":...}
+received: {"id":"debug-2","sender":"user2","text":"テスト投稿です","timestamp":...}
+--- stop ---
+(以降 received は増えない)
+```
+
+JS にインターフェース構文が無いので `CommentSource` は `@typedef` で形だけ決めた。
+抽象クラスを作って継承させることはしない(decisions の「抽象化しすぎない」)。
+`DebugCommentSource` は `@implements` を書いておくと `tsc` が適合を検査する。
+
+`start` / `stop` はどちらも二重に呼べる。二重 `start` で timer が二本走ると
+コメントが倍の速さで流れるため、動作中の `start` は無視する。
+
+`main.js` のダミー配列をこの供給源経由へ差し替えた。T-005 で「先取りしない」と
+書いた部分がここで本来の形になっている。`Danmaku` は変えていない。
+
 ### T-008: WebSocket で Node.js → overlay へ配信
 
 1. Express + ws のサーバーを `src/server/` に立てる
@@ -107,9 +129,11 @@ Vitest + jsdom を入れた(`npm test`)。
 |---|---|
 | レーンの round-robin、同時表示上限、レーン数の算出 | `lane.js` / `lane.test.js` |
 | 縦位置、表示時間、上限超過時の破棄、`textContent` での挿入 | `danmaku.js` / `danmaku.test.js` |
+| start / stop、二重呼び出し、吐かれるコメントの形 | `source.js` / `source.test.js` |
 
 そのために、判断を含むロジックを DOM 操作から切り離して `lane.js` へ置いた。
-`lane.js` は DOM を知らない。
+`lane.js` は DOM を知らない。タイマーを使う `source.js` は Vitest の fake timers で
+時間を進める。実時間を待つテストにはしない。
 
 `<script>alert(1)</script>` と `<img onerror>` が要素にならず文字列として入ることを
 テストで固定してある。T-009 の完了条件と同じ性質のものを、入力経路ができる前に
