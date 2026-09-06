@@ -33,4 +33,3 @@
 |---|---|
 | multi monitor 対応 / 表示先の切り替え | **MVP は主ディスプレイのみでよい**(2026-09-06 決定)。将来やるときのために T-004 で実測した内容を残す。`screen.getAllDisplays()` は 内蔵 1800x1169@2x(primary, internal:true)と外部 1920x1080@1x(x:1800)を返した。全画面に出すだけなら `getAllDisplays()` を回して BrowserWindow を複数作れば済む(10 行程度)。出す先を選ばせる方式(設定ファイル / CLI 引数 / UI)は使ってみないと決められないので未定 |
 | Keynote フルスクリーン対応 | T-004 の任意条件。満たせなければ将来機能として切る |
-| Zoom タブを Electron の隠しウィンドウへ移す | 現在は Zoom タブを開いている間だけコメントが流れ、閉じると止まる。`show: false` の BrowserWindow で SDK を動かせばタブが不要になる。Electron の中身は Chromium なのでブラウザ用 SDK がそのまま動くはず。**T-011 で使ってみてから判断する** |

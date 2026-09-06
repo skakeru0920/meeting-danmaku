@@ -54,9 +54,18 @@ DM は受信者の実 userId が入る。実測値は以下。
 実 payload は型定義の `ChatRecord`(`file` フィールドを持つ方)で届く。
 
 **Meeting SDK はブラウザ前提。Node では動かない。** `document` や WebRTC に
-依存している。そのため Zoom に繋ぐ部分だけブラウザのタブで動かし、受け取った
-コメントを `POST /comment` でサーバーへ渡す。**このタブを閉じるとコメントが
-止まる。** Electron の隠しウィンドウへ移す案は TODO.md の Icebox にある。
+依存している。そのため Zoom に繋ぐ部分は Chromium の上で動かし、受け取った
+コメントを `POST /comment` でサーバーへ渡す。
+
+**どこで動かすかはコマンドで分ける**(2026-09-06 に確定)。
+
+| | Zoom への接続 | 用途 |
+|---|---|---|
+| `npm start` | Electron の**見えないウィンドウ** | 本番。タブを閉じる事故が起きない |
+| `npm run dev` | **ブラウザのタブ** | 開発。SDK の画面と devtools が使える |
+
+隠すと join の失敗が画面で見えないので、**ページ側の console を Electron が
+ターミナルへ `[zoom]` 付きで転送する。**
 
 サーバー側で直接 Zoom に繋ぐ乗り換え先は無い。Meeting SDK for Linux は
 ネイティブライブラリで macOS 版が無く、Video SDK は Zoom Meeting に参加できず、
