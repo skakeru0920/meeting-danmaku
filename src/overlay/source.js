@@ -115,3 +115,112 @@ export class DebugCommentSource {
     };
   }
 }
+
+/**
+ * 受け取ったデータが OverlayComment の形をしているか確かめる。
+ *
+ * サーバーから来たものをそのまま描画へ渡さないための関門。
+ * 壊れた 1 件で弾幕全体が止まるのを防ぐ。
+ * T-010 で Zoom の実データが流れ始めるときに効く。
+ *
+ * @param {unknown} value
+ * @returns {value is OverlayComment}
+ */
+export function isOverlayComment(value) {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const c = /** @type {Record<string, unknown>} */ (value);
+
+  return (
+    typeof c.id === 'string' &&
+    typeof c.sender === 'string' &&
+    typeof c.text === 'string' &&
+    typeof c.timestamp === 'number'
+  );
+}
+
+/**
+ * サーバーから SSE でコメントを受け取る供給源。
+ *
+ * 再接続は EventSource に任せている。サーバーが落ちても、
+ * 再読み込みしても、勝手に繋ぎ直す。自前のループは持たない。
+ *
+ * @implements {CommentSource}
+ */
+export class SseCommentSource {
+  /**
+   * @param {object} [options]
+   * @param {string} [options.url] 接続先
+   * @param {typeof EventSource} [options.EventSourceClass] テストで差し替えるため
+   */
+  constructor(options = {}) {
+    this.url = options.url ?? '/events';
+    this.EventSourceClass = options.EventSourceClass ?? globalThis.EventSource;
+
+    /** @type {EventSource | null} */
+    this.eventSource = null;
+  }
+
+  /**
+   * 接続してコメントを受け取り始める。
+   *
+   * 既に接続している場合は何もしない。
+   *
+   * @param {CommentListener} listener
+   */
+  start(listener) {
+    if (this.eventSource !== null) {
+      return;
+    }
+
+    const es = new this.EventSourceClass(this.url);
+    this.eventSource = es;
+
+    es.onmessage = (event) => {
+      const comment = this.parse(event.data);
+      if (comment !== null) {
+        listener(comment);
+      }
+    };
+
+    es.onerror = () => {
+      // EventSource が自分で繋ぎ直すので、ここでは閉じない。
+      // 閉じると再接続まで止まってしまう。
+      console.warn('SSE の接続が切れた。再接続を待つ');
+    };
+  }
+
+  /** 接続を閉じる。閉じている場合は何もしない */
+  stop() {
+    if (this.eventSource === null) {
+      return;
+    }
+
+    this.eventSource.close();
+    this.eventSource = null;
+  }
+
+  /**
+   * 受信した文字列を OverlayComment にする。
+   *
+   * 壊れていれば null を返して捨てる。落とさずに次を待つ。
+   *
+   * @param {string} data
+   * @returns {OverlayComment | null}
+   */
+  parse(data) {
+    try {
+      const parsed = JSON.parse(data);
+      if (!isOverlayComment(parsed)) {
+        console.warn('OverlayComment の形をしていないので捨てる', parsed);
+        return null;
+      }
+      return parsed;
+    } catch (error) {
+      console.warn('JSON として読めないので捨てる', data, error);
+      return null;
+    }
+  }
+}

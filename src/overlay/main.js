@@ -1,5 +1,5 @@
 import { Danmaku } from './danmaku.js';
-import { DebugCommentSource } from './source.js';
+import { SseCommentSource } from './source.js';
 
 const stage = document.getElementById('stage');
 if (!stage) {
@@ -8,9 +8,10 @@ if (!stage) {
 
 const danmaku = new Danmaku(stage);
 
-// 供給源は差し替えられる。T-008 で WebSocket 受信のものに変わるが、
-// Danmaku 側は供給源を知らないので変えずに済む。
-const source = new DebugCommentSource();
+// コメントはサーバーから SSE で届く。何を流すかはサーバー側が決める。
+// いまは DebugCommentSource のダミーで、T-010 で Zoom のチャットに変わる。
+// overlay 側は供給源が変わっても影響を受けない。
+const source = new SseCommentSource();
 
 source.start((comment) => {
   danmaku.push(comment);

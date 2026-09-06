@@ -18,6 +18,8 @@ export default defineConfig({
     // Secret はブラウザに出さず、署名済み JWT だけが返る。
     proxy: {
       '/config': SIGNATURE_SERVER,
+      // overlay へコメントを配る SSE。1 件ずつ流れることは確認済み
+      '/events': { target: SIGNATURE_SERVER, changeOrigin: true },
     },
   },
   test: {

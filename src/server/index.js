@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import { Broadcaster } from './broadcast.js';
+import { DebugCommentSource } from '../overlay/source.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
 
@@ -59,7 +61,44 @@ app.get('/config', (req, res) => {
   });
 });
 
+const broadcaster = new Broadcaster();
+
+/**
+ * overlay へコメントを配る SSE エンドポイント。
+ *
+ * WebSocket ではなく SSE にしている。サーバー → overlay の一方向で足りること、
+ * 依存を増やさずに済むこと、EventSource が再接続を自前で持っていることが理由。
+ * 判断の経緯は docs/plan/003 を参照。
+ */
+app.get('/events', (req, res) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+    // nginx などが挟まったときにバッファされると流れなくなるため
+    'X-Accel-Buffering': 'no',
+  });
+  // ヘッダを先に送り切る。これが無いと最初の 1 件まで何も届かない
+  res.flushHeaders();
+
+  const remove = broadcaster.add((comment) => {
+    res.write(`data: ${JSON.stringify(comment)}\n\n`);
+  });
+
+  console.log(`overlay が接続した(接続数: ${broadcaster.size})`);
+
+  req.on('close', () => {
+    remove();
+    console.log(`overlay が切断した(接続数: ${broadcaster.size})`);
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`signature server: http://localhost:${PORT}`);
   console.log(`ミーティング番号: ${ZOOM_MEETING_NUMBER}`);
+
+  // T-008 の間はダミーを流し続ける。T-010 で ZoomCommentSource に差し替える。
+  const source = new DebugCommentSource();
+  source.start((comment) => broadcaster.broadcast(comment));
+  console.log('DebugCommentSource を開始した');
 });
