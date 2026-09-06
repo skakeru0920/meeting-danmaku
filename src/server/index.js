@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { Broadcaster } from './broadcast.js';
+import { toOverlayComment, MAX_TEXT_LENGTH } from './comment.js';
 import { DebugCommentSource } from '../overlay/source.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -53,6 +54,10 @@ function createSignature(meetingNumber) {
 
 const app = express();
 
+// /comment が JSON を受けるため。本文の上限は toOverlayComment 側でも見るが、
+// 巨大なボディをパースする前に切りたいので limit も入れておく。
+app.use(express.json({ limit: '64kb' }));
+
 app.get('/config', (req, res) => {
   res.json({
     meetingNumber: ZOOM_MEETING_NUMBER,
@@ -91,6 +96,41 @@ app.get('/events', (req, res) => {
     remove();
     console.log(`overlay が切断した(接続数: ${broadcaster.size})`);
   });
+});
+
+/** POST /comment で採番する連番。id の一意性のためだけに使う */
+let postedCount = 0;
+
+/**
+ * /debug 画面から投稿されたコメントを受け取る。
+ *
+ * **dev-only。** 認証は付けていない。誰でも投稿できるので、
+ * 開発機の外へ公開しない。
+ */
+app.post('/comment', (req, res) => {
+  const comment = toOverlayComment(req.body, { id: `post-${postedCount}` });
+
+  if (comment === null) {
+    res.status(400).json({
+      error: `text は 1〜${MAX_TEXT_LENGTH} 文字の文字列で送ってください`,
+    });
+    return;
+  }
+
+  postedCount += 1;
+  broadcaster.broadcast(comment);
+
+  res.status(202).json({ id: comment.id, delivered: broadcaster.size });
+});
+
+// express.json() が壊れた JSON で投げる SyntaxError を JSON にして返す。
+// 既定のハンドラだとスタックトレースが HTML で返り、パスが漏れる。
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && 'body' in err) {
+    res.status(400).json({ error: 'JSON として読めません' });
+    return;
+  }
+  next(err);
 });
 
 app.listen(PORT, () => {

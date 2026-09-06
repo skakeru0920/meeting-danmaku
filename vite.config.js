@@ -20,6 +20,8 @@ export default defineConfig({
       '/config': SIGNATURE_SERVER,
       // overlay へコメントを配る SSE。1 件ずつ流れることは確認済み
       '/events': { target: SIGNATURE_SERVER, changeOrigin: true },
+      // /debug 画面からの投稿先(dev-only)
+      '/comment': SIGNATURE_SERVER,
     },
   },
   test: {
