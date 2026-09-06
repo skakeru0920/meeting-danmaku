@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "concurrently -n server,vite -c blue,green \"npm:dev:server\" \"npm:dev:vite\"",
     "dev:server": "node src/server/index.js",
-    "dev:vite": "vite"
+    "dev:vite": "vite",
+    "typecheck": "tsc -p jsconfig.json"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^10.0.5",
+    "typescript": "^7.0.2",
     "vite": "^8.2.2"
   }
 }

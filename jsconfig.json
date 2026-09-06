@@ -1,0 +1,22 @@
+{
+  "// メモ": [
+    "overlay は Vanilla JS で書く(docs/decisions/ の「overlay の実装」)。",
+    "型は .ts へ移行せず JSDoc で書き、tsc は検査だけに使う(noEmit)。",
+    "実行されるのは素の JS のままで、ビルド成果物は増えない。",
+    "",
+    "検査対象は src/overlay/ だけ。src/zoom/ は Zoom SDK、src/server/ は",
+    "Express と Node API に依存していて、型を通すには @types/node の追加と",
+    "既存コードの書き換えが要る。overlay の型づけとは別の作業なので広げない。"
+  ],
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "types": []
+  },
+  "include": ["src/overlay/**/*.js"]
+}
