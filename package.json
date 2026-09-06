@@ -13,7 +13,8 @@
     "dev:vite": "vite",
     "typecheck": "tsc -p jsconfig.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "electron:spike": "env -u ELECTRON_RUN_AS_NODE electron src/electron/main.js"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^10.0.5",
+    "electron": "^44.2.0",
     "jsdom": "^30.0.1",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
