@@ -73,10 +73,38 @@ Meeting SDK の利用に有料プランは要らない。Pro への切り替え�
 
 ## 表示方式
 
-**未決定。** Plan 002 の結果で決まる。
+**採用**: **Electron 透過オーバーレイ単体。OBS は使わない。**(2026-09-06 に確定)
 
-- Electron 透過ウィンドウがデスクトップ全体共有に映る → Electron 単体。OBS は不要
-- 映らない → 発表者向けに Electron、視聴者向けに OBS Browser Source を併用
+Plan 002 で、Electron の透過ウィンドウが Zoom のデスクトップ全体共有を通して
+別 participant にも見えることを実機で確認した。これで目的 1(発表者が把握)と
+目的 2(視聴者に見せる)の両方を Electron だけで満たせる。
+
+BrowserWindow の設定は以下。**`enableLargerThanScreen` が要る**点に注意。
+これが無いと macOS が表示の瞬間にウィンドウを workArea の内側へ押し込み、
+メニューバーと Dock のぶん右下へずれて画面からはみ出す。表示後の
+`setBounds` では戻せない。
+
+```js
+transparent: true, frame: false, hasShadow: false,
+skipTaskbar: true, focusable: false, resizable: false, movable: false,
+fullscreenable: true,          // false だと enableLargerThanScreen が効かない
+enableLargerThanScreen: true,  // これが無いと画面全体を覆えない
+```
+
+```js
+win.setBounds(display.bounds);  // 表示前に呼ぶ。表示後は効かない
+win.setIgnoreMouseEvents(true, { forward: true });
+win.setAlwaysOnTop(true, 'screen-saver');
+win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+```
+
+**フルスクリーンアプリの上にも出る**(Google Slides の全画面表示で確認)。
+
+**表示先は主ディスプレイのみ。** MVP はこれでよい。複数ディスプレイ対応と
+表示先の切り替えは TODO.md の Icebox にある。
+
+この環境には `ELECTRON_RUN_AS_NODE=1` が設定されており、そのまま `electron` を
+起動すると GUI にならない。`npm run electron:spike` が `env -u` で打ち消している。
 
 ## overlay の実装
 

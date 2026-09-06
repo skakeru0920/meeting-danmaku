@@ -12,22 +12,17 @@
 
 | ID | タスク | Plan |
 |---|---|---|
-| T-004 | Electron 透過オーバーレイが画面共有に映るか検証する | 002 |
 | T-008 | WebSocket で Node.js → overlay へ配信 | 003 |
 
 ## Blocked — 依存待ち
 
 `depends` のタスクがすべて archive へ移ったら Ready へ移す。
 
-T-012 は T-004 が**失敗した場合にのみ**着手する。成功すれば不要になるので、
-そのときは archive へ「中止」として移す。
-
 | ID | タスク | depends | Plan |
 |---|---|---|---|
 | T-009 | dev-only の `/debug` 投稿画面 | T-008 | 003 |
 | T-010 | `ZoomCommentSource` を overlay に接続する | T-009 | 004 |
-| T-011 | 実際の画面共有で通しで確認する | T-004, T-010 | 004 |
-| T-012 | OBS Browser Source 経由の表示を用意する | T-004 | 004 |
+| T-011 | 実際の画面共有で通しで確認する | T-010 | 004 |
 
 ## Icebox — 検討中
 
