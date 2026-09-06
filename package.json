@@ -8,6 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "start": "concurrently -n server,vite,overlay -c blue,green,magenta \"npm:dev:server\" \"npm:dev:vite\" \"npm:overlay\"",
     "dev": "concurrently -n server,vite -c blue,green \"npm:dev:server\" \"npm:dev:vite\"",
     "dev:server": "node src/server/index.js",
     "dev:vite": "vite",

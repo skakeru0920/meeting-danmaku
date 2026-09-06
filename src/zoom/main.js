@@ -73,8 +73,34 @@ async function post(comment) {
   }
 }
 
+/**
+ * 署名サーバーから設定を取る。
+ *
+ * 取れるまで繰り返す。npm start で同時に起動すると、Express が待ち受ける前に
+ * このタブが開いて失敗するため。エラーにせず待てば、そのまま join できる。
+ *
+ * @param {number} [retryDelayMs]
+ * @returns {Promise<{meetingNumber: string, password: string, signature: string}>}
+ */
+async function fetchConfig(retryDelayMs = 1000) {
+  for (;;) {
+    try {
+      const res = await fetch('/config');
+      if (res.ok) {
+        return await res.json();
+      }
+      setStatus(`署名サーバーの応答が ${res.status}。再試行する`);
+    } catch {
+      // 起動途中は proxy が ECONNREFUSED を返す。落とさずに待つ
+      setStatus('署名サーバーの起動を待っている…');
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+  }
+}
+
 async function main() {
-  const config = await fetch('/config').then((r) => r.json());
+  const config = await fetchConfig();
 
   const client = ZoomMtgEmbedded.createClient();
 

@@ -30,6 +30,9 @@ const { app, BrowserWindow, screen } = electron;
  */
 const OVERLAY_URL = process.env.OVERLAY_URL ?? 'http://localhost:5173/src/overlay/';
 
+/** overlay を読めなかったときに読み直すまでの待ち時間(ms) */
+const RETRY_DELAY_MS = 1000;
+
 /** @type {BrowserWindow | null} */
 let overlayWindow = null;
 
@@ -88,16 +91,26 @@ function createOverlayWindow() {
   // 別の Space へ移っても追従させ、フルスクリーンの上にも出す
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
+  // 読めるまで繰り返す。npm start で Vite と同時に起動すると、
+  // Vite が待ち受ける前に読みに行って失敗するため。
+  //
+  // 待つのではなく繰り返すことで、dev サーバーを後から起動しても繋がる。
+  // 依存(wait-on など)を増やさずに済む。
+  overlayWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    console.warn(`overlay を読めなかった: ${errorDescription} (${errorCode})`);
+    console.warn(`${RETRY_DELAY_MS}ms 後に ${OVERLAY_URL} を読み直す`);
+
+    setTimeout(() => {
+      // 読み直す前にウィンドウが閉じられていることがある
+      if (overlayWindow !== null && !overlayWindow.isDestroyed()) {
+        overlayWindow.loadURL(OVERLAY_URL);
+      }
+    }, RETRY_DELAY_MS);
+  });
+
   // Vite が配信する overlay を読む。file:// で直接開くと SSE の接続先
   // (相対パスの /events)が解決できないので URL で読む。
   overlayWindow.loadURL(OVERLAY_URL);
-
-  // 読めなかったときに無言で真っ白にならないようにする。
-  // 起こりやすいのは dev サーバーが立っていないケース。
-  overlayWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
-    console.error(`overlay を読めなかった: ${errorDescription} (${errorCode})`);
-    console.error(`${OVERLAY_URL} を開けるか確認する。npm run dev は起動しているか?`);
-  });
 }
 
 app.whenReady().then(() => {
