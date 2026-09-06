@@ -41,7 +41,7 @@ overlay の HTML / CSS / JS は両方式で共用する。
 | Phase | ゴール | 状態 |
 |---|---|---|
 | 1 | Zoom chat → terminal に `console.log` | **完了**(Plan 001) |
-| 2 | debug message → browser overlay | 進行中(Plan 003。残りは T-008 / T-009) |
+| 2 | debug message → browser overlay | 進行中(Plan 003。残りは T-009) |
 | 3 | Zoom chat → overlay | 未着手(Plan 004) |
 | 4 | Zoom chat → 画面共有(Electron) | 一部完了(Plan 002 で表示方式を確定) |
 
@@ -86,7 +86,8 @@ React を固定しているのは SDK が `react@18.2.0` を範囲指定なし�
 19 では `ReactCurrentOwner` の削除により実行時エラーになる。
 `redux` / `react-redux` / `redux-thunk` も同様に固定。
 
-**未確定分**。overlay の配信に `ws` を使う想定(Plan 003 の T-008)。
+overlay への配信は **SSE**(依存なし。`res.write()` と `EventSource` だけ)。
+`ws` は使わない。理由は [docs/decisions/](./docs/decisions/README.md) の「overlay への配信」。
 デスクトップへ重ねる表示シェルとして Electron を使う想定(Plan 002 で検証)。
 
 DB・認証・デプロイ・Docker・Next.js などは MVP では扱わない。
@@ -158,13 +159,14 @@ Vite(5173)と署名サーバー(3000)が同時に立つ。画面は 2 つある�
 | URL | 中身 |
 |---|---|
 | http://localhost:5173/src/zoom/ | Zoom SDK クライアント。チャットの payload を出す |
-| http://localhost:5173/src/overlay/ | overlay。いまは DebugCommentSource のダミーが流れる |
+| http://localhost:5173/src/overlay/ | overlay。サーバーから SSE で届くダミーが流れる |
 
 Zoom 側を開くと、SDK が `Comment Overlay` という名前で会議に参加し、
 受信したチャットの payload を画面と console に出す。
 
-overlay 側はまだ Zoom と繋がっていない。ダミーのコメントが流れるだけで、
-Zoom チャットを流すのは T-010(Plan 004)。
+overlay 側はまだ Zoom と繋がっていない。サーバーの `DebugCommentSource` が
+吐くダミーが `GET /events` の SSE で届く。Zoom チャットに差し替えるのは
+T-010(Plan 004)で、そのときも overlay と SSE の部分は変わらない。
 
 **背景の透過はブラウザでは確認できない。** ブラウザ自身が白地を敷くため、
 実際に透けるかは Electron の透過ウィンドウか OBS に載せて確かめる(T-004)。

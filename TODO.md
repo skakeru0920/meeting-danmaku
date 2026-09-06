@@ -12,7 +12,7 @@
 
 | ID | タスク | Plan |
 |---|---|---|
-| T-008 | WebSocket で Node.js → overlay へ配信 | 003 |
+| T-009 | dev-only の `/debug` 投稿画面 | 003 |
 
 ## Blocked — 依存待ち
 
@@ -20,7 +20,6 @@
 
 | ID | タスク | depends | Plan |
 |---|---|---|---|
-| T-009 | dev-only の `/debug` 投稿画面 | T-008 | 003 |
 | T-010 | `ZoomCommentSource` を overlay に接続する | T-009 | 004 |
 | T-011 | 実際の画面共有で通しで確認する | T-010 | 004 |
 

@@ -110,12 +110,32 @@ win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
 静的 HTML + CSS animation + Vanilla JS。React は使わない。
 
-Electron / OBS のどちらの表示方式でも同じ overlay を共用するため、
-**表示先に依存する処理を overlay 側に持ち込まない**。
+**表示先に依存する処理を overlay 側に持ち込まない。**
+表示方式は Electron 単体に確定したが(上の「表示方式」)、overlay は
+ブラウザで開いても同じように動く状態を保つ。開発中の確認がしやすい。
 
 Zoom 接続なしでコメントを投げられる dev-only の `/debug` 画面を用意する。
 
 初期値: コメント表示時間 8 秒固定、同時表示上限 20、レーンは round-robin。
+
+## overlay への配信
+
+**採用**: **SSE(Server-Sent Events)。WebSocket は使わない。**(2026-09-06 に確定)
+
+サーバーの `GET /events` が接続中の overlay へ `OverlayComment` を JSON で
+1 件ずつ配る。overlay 側は `EventSource` で受ける。
+
+- **一方向で足りる。** overlay から送り返すものがない
+- **依存が増えない。** `res.write()` と `EventSource` だけで書ける
+- **再接続は `EventSource` 任せ。** 自前のループを持たない
+
+受信データは `isOverlayComment` で形を確かめてから描画へ渡す。
+壊れた 1 件で弾幕全体が止まらないようにするため。
+
+`src/server/broadcast.js` は通信方式を知らない。双方向が必要になったら
+(送信が高頻度になる、視聴者が操作して全員へ即反映する)、供給源クラスの
+差し替えで WebSocket へ移れる。判断の経緯は
+[docs/plan/003](../plan/003-overlay-with-debug-source.md)。
 
 ## コメントの内部形式
 
