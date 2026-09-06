@@ -181,16 +181,23 @@ T-010(Plan 004)で、そのときも overlay と SSE の部分は変わらない
 ### Electron オーバーレイ
 
 ```bash
-npm run dev      # 先に起動しておく(overlay は Vite が配信する)
-npm run overlay  # 別のターミナルで
+npm start  # サーバー + Vite + overlay をまとめて起動する
 ```
 
-デスクトップ全体に透過ウィンドウを重ねる。終了は起動したターミナルで Ctrl+C。
+デスクトップ全体に透過ウィンドウを重ねる。終了は起動したターミナルで Ctrl+C
+(3 つとも止まる)。
 
-**`npm run dev` を先に起動すること。** overlay は
-`http://localhost:5173/src/overlay/` を読む。ブラウザで開くのと同じものが
-動くので、見た目の調整はブラウザで行える。別ポートで動かしているときは
-`OVERLAY_URL` で上書きする。
+**Zoom チャットを流すには、別途ブラウザで
+`http://localhost:5173/src/zoom/` を開いて join する。** Meeting SDK は
+ブラウザ前提なので、このタブを閉じるとコメントが止まる。
+
+個別に起動したいときは `npm run dev`(サーバー + Vite)と `npm run overlay`
+を別のターミナルで動かす。**順序は問わない。** overlay は読めるまで 1 秒ごとに
+読み直すので、dev サーバーを後から起動しても繋がる。
+
+overlay は `http://localhost:5173/src/overlay/` を読む。ブラウザで開くのと
+同じものが動くので、見た目の調整はブラウザで行える。別ポートで動かしている
+ときは `OVERLAY_URL` で上書きする。
 
 主ディスプレイにのみ表示する。**Zoom で共有するときは主ディスプレイを選ぶこと。**
 複数ディスプレイ対応は TODO.md の Icebox にある。

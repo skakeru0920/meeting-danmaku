@@ -124,7 +124,9 @@ win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 **overlay は Vite が配信するものを URL で読む**(`http://localhost:5173/src/overlay/`)。
 `file://` で直接開くと SSE の接続先(相対パスの `/events`)が解決できないため。
 ブラウザで開くのと同じものが動くので、表示先による差異が出ない。
-**`npm run dev` を先に起動しておく必要がある。**
+`npm start` がサーバー・Vite・overlay をまとめて起動する。**起動順序は問わない。**
+overlay は読めるまで 1 秒ごとに読み直すので、dev サーバーが後から立っても繋がる。
+待つのではなく繰り返す形にしたのは、依存(`wait-on` など)を増やさないため。
 
 ## overlay の実装
 
