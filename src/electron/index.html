@@ -54,6 +54,20 @@
        * 半透明の枠を四隅に出しておくと、ウィンドウがどこまで覆っているかと、
        * 枠の内側の背景が透けているかが同時に分かる。
        */
+      /*
+       * 赤枠と説明ラベルは検証用の目印。既定では出さない。
+       * `npm run electron:spike -- --frame` を付けたときだけ表示する。
+       */
+      .frame,
+      .label {
+        display: none;
+      }
+
+      body.show-frame .frame,
+      body.show-frame .label {
+        display: block;
+      }
+
       .frame {
         position: absolute;
         inset: 20px;
@@ -86,5 +100,11 @@
 
     <div class="marker">■ ここに弾幕が流れる ■</div>
 
+    <script>
+      // --frame が渡されたときだけ赤枠と説明ラベルを出す
+      if (new URLSearchParams(location.search).get('frame') === '1') {
+        document.body.classList.add('show-frame');
+      }
+    </script>
   </body>
 </html>

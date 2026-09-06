@@ -87,7 +87,13 @@ function createOverlayWindow() {
   // 別の Space へ移っても追従させ、フルスクリーンの上にも出す
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-  overlayWindow.loadFile(path.join(__dirname, 'index.html'));
+  // 赤枠と説明ラベルは検証用の目印。既定では出さない。
+  // 切り分けが要るときだけ `npm run electron:spike -- --frame` で出す。
+  const showFrame = process.argv.includes('--frame');
+
+  overlayWindow.loadFile(path.join(__dirname, 'index.html'), {
+    query: { frame: showFrame ? '1' : '0' },
+  });
 }
 
 app.whenReady().then(() => {

@@ -43,10 +43,11 @@ overlay の HTML / CSS / JS は両方式で共用する。
 | 1 | Zoom chat → terminal に `console.log` | **完了**(Plan 001) |
 | 2 | debug message → browser overlay | 進行中(Plan 003。残りは T-008 / T-009) |
 | 3 | Zoom chat → overlay | 未着手(Plan 004) |
-| 4 | Zoom chat → 画面共有(Electron または OBS) | 未着手(Plan 002 / 004) |
+| 4 | Zoom chat → 画面共有(Electron) | 一部完了(Plan 002 で表示方式を確定) |
 
-Phase 4 の実現方法は Plan 002 の結果で決まる。Electron の透過オーバーレイが
-デスクトップ全体共有に映れば OBS は不要になり、映らなければ OBS を残す。
+Phase 4 の実現方法は **Electron 単体に確定**した(2026-09-06)。透過オーバーレイが
+Zoom のデスクトップ全体共有を通して別 participant にも見えることを確認したため、
+OBS は使わない。
 
 ## 進め方
 
@@ -56,7 +57,7 @@ Phase 4 の実現方法は Plan 002 の結果で決まる。Electron の透過�
 | # | Plan | 種別 | 状態 |
 |---|---|---|---|
 | 001 | Zoom チャットを受信する(SDK 選定を含む) | 検証 | **完了** |
-| 002 | Electron 透過オーバーレイが画面共有に映るか | 検証 | 未着手 |
+| 002 | Electron 透過オーバーレイが画面共有に映るか | 検証 | **完了** |
 | 003 | Zoom 抜きでコメントが流れる状態を作る | 実装 | 進行中 |
 | 004 | Zoom チャットを画面共有に流す | 実装 | 未着手 |
 
@@ -174,6 +175,22 @@ Zoom チャットを流すのは T-010(Plan 004)。
 
 チャットを投稿すると payload が流れる。Everyone 宛と DM の判別は
 `receiver.userId === 0`(0 が Everyone)。
+
+### Electron オーバーレイ(T-004 の検証用)
+
+```bash
+npm run electron:spike            # 弾幕だけ
+npm run electron:spike -- --frame # 赤枠と説明ラベルも出す(切り分け用)
+```
+
+デスクトップ全体に透過ウィンドウを重ねる。終了は起動したターミナルで Ctrl+C。
+
+主ディスプレイにのみ表示する。**Zoom で共有するときは主ディスプレイを選ぶこと。**
+複数ディスプレイ対応は TODO.md の Icebox にある。
+
+`npm run` 経由で引数を渡すには `--` が要る。
+また、この環境には `ELECTRON_RUN_AS_NODE=1` が設定されているため、
+`npx electron` を直接叩くと GUI にならない。必ずこのスクリプトを使う。
 
 ### テストと型検査
 
