@@ -53,6 +53,15 @@ DM は受信者の実 userId が入る。実測値は以下。
 
 実 payload は型定義の `ChatRecord`(`file` フィールドを持つ方)で届く。
 
+**Meeting SDK はブラウザ前提。Node では動かない。** `document` や WebRTC に
+依存している。そのため Zoom に繋ぐ部分だけブラウザのタブで動かし、受け取った
+コメントを `POST /comment` でサーバーへ渡す。**このタブを閉じるとコメントが
+止まる。** Electron の隠しウィンドウへ移す案は TODO.md の Icebox にある。
+
+サーバー側で直接 Zoom に繋ぐ乗り換え先は無い。Meeting SDK for Linux は
+ネイティブライブラリで macOS 版が無く、Video SDK は Zoom Meeting に参加できず、
+RTMS は有料。
+
 **SDK クライアントは会議に participant として参加する**(外から監視する API ではない)。
 参加者リストに 1 人増える(名前は `userName` で指定。カメラ OFF、**マイクは ON のまま**)。
 マイクを切る方法は未解決で Icebox にある。
@@ -114,9 +123,11 @@ win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 表示方式は Electron 単体に確定したが(上の「表示方式」)、overlay は
 ブラウザで開いても同じように動く状態を保つ。開発中の確認がしやすい。
 
-Zoom 接続なしでコメントを投げられる dev-only の `/debug` 画面がある
-(`http://localhost:5173/src/debug/`)。`POST /comment` で投稿する。
+**`POST /comment` がコメントを受け取る唯一の口。** Zoom タブからも、
+手動投稿の `/debug` 画面(`http://localhost:5173/src/debug/`)からも同じ口へ送る。
 **認証は付けていないので開発機の外へ公開しない。**
+
+ダミーの自動投稿は既定で止まっている。`npm run dev:dummy` で動く。
 
 **XSS の防御は overlay の `textContent` 一箇所に集約する。** 投稿経路の途中で
 エスケープしない。サーバーでエスケープすると画面に `&lt;script&gt;` が出る。

@@ -1,9 +1,9 @@
 # Plan 004: Zoom チャットを画面共有に流す
 
 - 日付: 2026-09-04
-- 状態: 未着手
+- 状態: 進行中
 - 種別: 実装
-- TODO: T-010, T-011, T-012
+- TODO: T-010(完了), T-011, T-012(中止)
 
 ## この Plan の狙い
 
@@ -14,10 +14,11 @@
 
 - **Plan 001 が完了していること** — Everyone 宛と DM を判別する条件が確定している
 - **Plan 002 が完了していること** — 表示方式(Electron 単体か OBS 併用か)が確定している
-- **Plan 003 が完了していること** — overlay と WebSocket 配信が動いている
+- **Plan 003 が完了していること** — overlay と配信が動いている
+  (WebSocket と書いていたが T-008 で SSE に変えた)
 
-着手前に `docs/decisions/README.md` の「表示方式」を読み、どちらの構成で
-組むかを確定させること。未検証のまま進めない。
+いずれも完了済み。表示方式は Electron 単体に確定している
+(`docs/decisions/README.md` の「表示方式」)。
 
 ## やること
 
@@ -25,11 +26,61 @@
 
 1. Plan 001 で確認した chat callback を `CommentSource` 実装にまとめる
 2. Plan 001 で特定した条件で Everyone 宛のみを通す
-3. Zoom の payload を `OverlayComment` へ正規化して WebSocket へ流す
+3. Zoom の payload を `OverlayComment` へ正規化して配信へ流す
 4. Everyone 宛と DM の両方を投稿して挙動を見る
 
 **完了条件**: Zoom チャットへ Everyone 宛で投稿すると overlay に流れる。
 DM は流れない。
+
+**結果**(2026-09-06): 完了。実機で Everyone 宛が流れること、DM が流れないことを
+確認した。
+
+#### 経路
+
+**Meeting SDK はブラウザ前提なので、Zoom に繋ぐ部分だけタブの中で動く。**
+`document` や WebRTC に依存していて Node では動かない。
+
+```text
+[ブラウザのタブ]              [Node.js]           [Electron]
+Zoom SDK
+  ↓ chat-on-message
+ZoomCommentSource     ← Everyone 宛だけ通す
+  ↓ POST /comment
+                        Express
+                          ↓
+                        Broadcaster
+                          ↓ SSE
+                                        →  overlay
+```
+
+T-009 で作った `POST /comment` をそのまま使っている。**`/comment` の位置づけが
+「dev-only の投稿口」から「コメントを受け取る唯一の口」に変わった。**
+
+サーバー側で Zoom に繋ぐ案も比べたが、**乗り換え先が無いので選べなかった。**
+Meeting SDK for Linux はネイティブライブラリで macOS 版が無く、Video SDK は
+Zoom Meeting に参加できず(独自セッション用)、RTMS は有料。どれも T-001 の
+選定をやり直すことになる。
+
+**このタブを閉じるとコメントが止まる。** Electron の隠しウィンドウ
+(`show: false` の BrowserWindow)で動かせばタブは不要になる。中身は Chromium なので
+ブラウザ用の SDK がそのまま動く。**T-011 で検討する。**
+
+#### DM を捨てる場所
+
+`src/zoom/comment-source.js` の `toOverlayComment` **1 箇所**に集約した。
+判別は `receiver.userId === 0`(T-003 で確定)。
+
+**`receiver` が欠けるなど判定できない payload は「流さない」側へ倒す。**
+通してしまうと DM が漏れるため。テストで固定してある。
+
+Zoom タブの画面には「DM を受信したが流さなかった」とだけ出す。**本文は出さない。**
+流れていないことを目視で確かめつつ、中身は画面に残さない。
+
+#### ダミーの自動投稿を既定で止めた
+
+実際の Zoom コメントに混ざると見分けがつかないため。`--debug-source` を
+付けたときだけ動く(`npm run dev:dummy`)。見た目を調整するときに使う。
+`/src/debug/` からの手動投稿はフラグに関係なく使える。
 
 ### T-011: 実際の画面共有で通しで確認する
 
@@ -48,6 +99,9 @@ DM は流れない。
 - DM が流れていない
 
 ### T-012: OBS Browser Source 経由の表示を用意する
+
+**中止**(2026-09-06)。Plan 002 の必須(2)が成功し、Electron 単体で視聴者にも
+見えることを確認したため不要になった。以下は当初の記述。
 
 **Plan 002 の必須(2) が失敗した場合にのみ着手する。** 成功していれば不要なので、
 その場合は TODO を「中止」として archive へ移す。

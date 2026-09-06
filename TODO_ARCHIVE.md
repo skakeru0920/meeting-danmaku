@@ -11,6 +11,7 @@
 | ID | タスク | Plan | 完了日 | 備考 |
 |---|---|---|---|---|
 <!-- ARCHIVE_TOP -->
+| T-010 | `ZoomCommentSource` を overlay に接続する | 004 | 2026-09-06 | Meeting SDK はブラウザ前提なのでタブ経由で POST /comment へ送る。DM を捨てる判断は toOverlayComment 1 箇所 |
 | T-009 | dev-only の `/debug` 投稿画面 | 003 | 2026-09-06 | 本文はサーバーでエスケープしない。XSS 防御は overlay の textContent に集約する |
 | T-008 | WebSocket で Node.js → overlay へ配信 | 003 | 2026-09-06 | ws ではなく SSE で実装。一方向で足り依存も増えず、再接続が EventSource 標準で得られるため |
 | T-012 | OBS Browser Source 経由の表示を用意する | 004 | 2026-09-06 | **中止**。T-004 が成功し Electron 単体で視聴者にも見えるため不要になった |
