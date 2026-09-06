@@ -11,6 +11,7 @@
 | ID | タスク | Plan | 完了日 | 備考 |
 |---|---|---|---|---|
 <!-- ARCHIVE_TOP -->
+| T-011 | 実際の画面共有で通しで確認する | 004 | 2026-09-06 | **MVP 完成**。Electron が T-004 のダミー画面を表示したままだったのを直した。マイクの件も決着(掴んでいなかった) |
 | T-010 | `ZoomCommentSource` を overlay に接続する | 004 | 2026-09-06 | Meeting SDK はブラウザ前提なのでタブ経由で POST /comment へ送る。DM を捨てる判断は toOverlayComment 1 箇所 |
 | T-009 | dev-only の `/debug` 投稿画面 | 003 | 2026-09-06 | 本文はサーバーでエスケープしない。XSS 防御は overlay の textContent に集約する |
 | T-008 | WebSocket で Node.js → overlay へ配信 | 003 | 2026-09-06 | ws ではなく SSE で実装。一方向で足り依存も増えず、再接続が EventSource 標準で得られるため |
