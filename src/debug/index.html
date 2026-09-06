@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>T-009: コメント投稿(dev-only)</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <h1>コメント投稿</h1>
+    <p class="note">
+      開発用。ここから投稿すると overlay に流れる。
+      <a href="/src/overlay/" target="_blank" rel="noreferrer">overlay を開く</a>
+    </p>
+
+    <form id="form">
+      <label for="sender">名前</label>
+      <input id="sender" name="sender" type="text" placeholder="debug" autocomplete="off" />
+
+      <label for="text">本文</label>
+      <input id="text" name="text" type="text" required autocomplete="off" autofocus />
+
+      <button type="submit">送信</button>
+    </form>
+
+    <!-- 送信結果。textContent で書き換える -->
+    <p id="status" class="status"></p>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
