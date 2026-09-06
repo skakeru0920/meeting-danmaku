@@ -56,15 +56,25 @@
        */
       .frame {
         position: absolute;
-        inset: 20px;
+        /*
+         * メニューバーと Dock を避けた位置へ描く。値はメインプロセスが
+         * workArea から計算してクエリで渡す(既定は 0)。
+         *
+         * ウィンドウ自体は画面全体を覆ったまま。枠だけを内側へ寄せている。
+         * 枠が隠れていると、どこまで覆っているかが確認できないため。
+         */
+        top: calc(var(--inset-top, 0px) + 20px);
+        right: calc(var(--inset-right, 0px) + 20px);
+        bottom: calc(var(--inset-bottom, 0px) + 20px);
+        left: calc(var(--inset-left, 0px) + 20px);
         border: 4px solid rgba(255, 0, 0, 0.6);
         border-radius: 8px;
       }
 
       .label {
         position: absolute;
-        top: 32px;
-        left: 32px;
+        top: calc(var(--inset-top, 0px) + 32px);
+        left: calc(var(--inset-left, 0px) + 32px);
         font-family: ui-monospace, monospace;
         font-size: 14px;
         color: #fff;
@@ -85,5 +95,16 @@
     </div>
 
     <div class="marker">■ ここに弾幕が流れる ■</div>
+
+    <script>
+      // メニューバーと Dock のぶんを CSS 変数へ入れる。
+      // 赤枠と説明ラベルがそれらの下に隠れないようにするためだけのもの。
+      const params = new URLSearchParams(location.search);
+      for (const side of ['top', 'right', 'bottom', 'left']) {
+        const key = `inset${side[0].toUpperCase()}${side.slice(1)}`;
+        const value = Number(params.get(key) ?? 0);
+        document.documentElement.style.setProperty(`--inset-${side}`, `${value}px`);
+      }
+    </script>
   </body>
 </html>

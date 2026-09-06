@@ -35,7 +35,12 @@ let overlayWindow = null;
 function createOverlayWindow() {
   // 画面全体を覆う。work area ではなく bounds を使う
   // (メニューバーや Dock の上にも出したいため)
-  const { bounds } = screen.getPrimaryDisplay();
+  //
+  // 主ディスプレイのみ。MVP はこれでよい(2026-09-06 に決定)。
+  // 複数ディスプレイへ出す・出す先を切り替えるのは Icebox の
+  // 「multi monitor 対応」に残してある。
+  const display = screen.getPrimaryDisplay();
+  const { bounds, workArea } = display;
 
   overlayWindow = new BrowserWindow({
     x: bounds.x,
@@ -67,7 +72,17 @@ function createOverlayWindow() {
   // 別の Space へ移っても追従させ、フルスクリーンの上にも出す
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-  overlayWindow.loadFile(path.join(__dirname, 'index.html'));
+  // 検証用の赤枠を、メニューバーと Dock を避けた位置へ描くための値。
+  // ウィンドウ自体は bounds いっぱいのままにする(弾幕はメニューバーや
+  // Dock の上にも出したいため)。枠だけを workArea の内側へ寄せる。
+  overlayWindow.loadFile(path.join(__dirname, 'index.html'), {
+    query: {
+      insetTop: String(workArea.y - bounds.y),
+      insetRight: String(bounds.x + bounds.width - (workArea.x + workArea.width)),
+      insetBottom: String(bounds.y + bounds.height - (workArea.y + workArea.height)),
+      insetLeft: String(workArea.x - bounds.x),
+    },
+  });
 }
 
 app.whenReady().then(() => {

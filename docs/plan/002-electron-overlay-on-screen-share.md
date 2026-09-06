@@ -81,7 +81,43 @@ Spaces / fullscreen / permissions)を実際に観測して潰す。
 
 ### 結果
 
-(未実施)
+**進行中**(2026-09-06 時点)。
+
+**必須(1): 満たした。** `npm run electron:spike` で起動し、透過ウィンドウが
+全アプリの手前に出ることと、クリックが背後へ透過することを確認した。
+
+**必須(2): 未確認。** これから Zoom のデスクトップ全体共有で試す。
+
+**任意(3): 未確認。**
+
+#### 分かったこと
+
+**この環境には `ELECTRON_RUN_AS_NODE=1` が設定されている。**
+そのまま `electron` を起動すると GUI ではなく素の Node として立ち上がり、
+`require('electron')` が返すのはバイナリのパス(文字列)になる。
+`app` も `BrowserWindow` も undefined で落ちる。
+`npm run electron:spike` は `env -u` でこれを打ち消している。
+**直接 `npx electron` を叩かないこと。**
+
+`electron` は CommonJS なので名前付き import ができない。
+`import { app } from 'electron'` は `SyntaxError` になる。default を受けて分解する。
+
+**検証環境は外部モニタあり。** `screen.getAllDisplays()` の実測値は以下。
+
+| | 解像度 | 位置 | 備考 |
+|---|---|---|---|
+| 内蔵 | 1800x1169 @2x | x:0 | primary, internal: true |
+| 外部 | 1920x1080 @1x | x:1800 | |
+
+**MVP は主ディスプレイのみでよい**と決めた(2026-09-06)。
+複数ディスプレイ対応と表示先の切り替えは Icebox に残してある。
+`getPrimaryDisplay()` だけを見ているので、**検証は内蔵ディスプレイを共有して行う。**
+外部モニタを共有すると弾幕が出ておらず、失敗の原因を取り違える。
+
+`bounds` と `workArea` は別物。メニューバー(上 44px)と Dock(左 81px)のぶんずれる。
+ウィンドウは `bounds` いっぱいに作る(メニューバーや Dock の上にも弾幕を出したいため)が、
+検証用の赤枠だけは `workArea` の内側へ寄せた。枠が隠れると
+どこまで覆っているか確認できないため。
 
 ### 分かったこと・後続への影響
 
