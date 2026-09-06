@@ -1,0 +1,74 @@
+/*
+ * overlay の見た目。
+ *
+ * Electron 透過ウィンドウと OBS Browser Source の両方で使う。
+ * 表示先に依存する指定は入れない(docs/decisions/ の「overlay の実装」)。
+ */
+
+/* レーン 1 本の高さ。danmaku.js の LANE_HEIGHT と合わせる */
+:root {
+  --lane-height: 48px;
+}
+
+/*
+ * 背景は透過。不透明な色を敷かない。
+ *
+ * 普通のブラウザで開くとブラウザ自身の白地が見えるが、それはブラウザの仕様。
+ * 実際に透けるかは Electron の transparent ウィンドウか OBS Browser Source に
+ * 載せて初めて分かる(T-004 / Plan 004 で確認する)。
+ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+#stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  /* 弾幕は見るだけのもの。クリックは背後のアプリへ通す */
+  pointer-events: none;
+}
+
+.comment {
+  position: absolute;
+  /* 右端の外から出てくる */
+  left: 100%;
+  white-space: nowrap;
+  line-height: var(--lane-height);
+
+  font-family: system-ui, sans-serif;
+  font-size: 32px;
+  font-weight: bold;
+  color: #fff;
+  /* 明るい画面の上でも読めるように縁取りする */
+  text-shadow:
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    2px 2px 0 #000;
+
+  /* 移動距離は幅を実測してから JS が --travel に入れる */
+  animation-name: flow;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+/*
+ * 右端の外から左端の外へ。
+ *
+ * left ではなく transform を使う。レイアウトを起こさず合成だけで済むため。
+ * 常に最前面で描画し続ける用途なので、ここは効く。
+ */
+@keyframes flow {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-1 * var(--travel)));
+  }
+}
