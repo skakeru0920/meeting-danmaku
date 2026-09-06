@@ -11,7 +11,9 @@
     "dev": "concurrently -n server,vite -c blue,green \"npm:dev:server\" \"npm:dev:vite\"",
     "dev:server": "node src/server/index.js",
     "dev:vite": "vite",
-    "typecheck": "tsc -p jsconfig.json"
+    "typecheck": "tsc -p jsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -29,7 +31,9 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^10.0.5",
+    "jsdom": "^30.0.1",
     "typescript": "^7.0.2",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
   }
 }

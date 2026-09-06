@@ -4,8 +4,13 @@ import react from '@vitejs/plugin-react';
 const SIGNATURE_SERVER = 'http://localhost:3000';
 
 export default defineConfig({
-  // フロントは src/zoom/ 配下。ここを Vite の root にする
-  root: 'src/zoom',
+  // root はプロジェクト直下。src/zoom/ と src/overlay/ の両方を配信するため。
+  //
+  // 以前は root: 'src/zoom' だったが、それだと overlay をブラウザで開けない。
+  // 開発中の URL は以下になる。
+  //   Zoom SDK クライアント: http://localhost:5173/src/zoom/
+  //   overlay:               http://localhost:5173/src/overlay/
+  root: '.',
   plugins: [react()],
   server: {
     port: 5173,
@@ -14,5 +19,11 @@ export default defineConfig({
     proxy: {
       '/config': SIGNATURE_SERVER,
     },
+  },
+  test: {
+    // overlay の DOM 操作をテストするため。ロジック側は DOM を知らないが、
+    // 描画部のテストで document を使う。
+    environment: 'jsdom',
+    include: ['src/**/*.test.js'],
   },
 });
