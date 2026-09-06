@@ -181,11 +181,16 @@ T-010(Plan 004)で、そのときも overlay と SSE の部分は変わらない
 ### Electron オーバーレイ
 
 ```bash
-npm start  # サーバー + Vite + overlay をまとめて起動する
+npm start    # 本番用。サーバー + Vite + overlay
+npm run dev  # 開発用。同じ構成で overlay に赤枠を出す
 ```
 
 デスクトップ全体に透過ウィンドウを重ねる。終了は起動したターミナルで Ctrl+C
 (3 つとも止まる)。
+
+`npm run dev` の赤枠は、ウィンドウが画面のどこまで覆っているかと、枠の内側が
+透けているかを確かめるための目印。**画面共有にも映る**ので、発表では
+`npm start` を使う。
 
 **Zoom チャットを流すには、別途ブラウザで
 `http://localhost:5173/src/zoom/` を開いて join する。** Meeting SDK は

@@ -6,6 +6,12 @@ if (!stage) {
   throw new Error('#stage が見つからない');
 }
 
+// 切り分け用の赤枠。Electron が --frame を付けて起動したときだけ出す。
+// ブラウザで直接開くときは URL に ?frame=1 を足す。
+if (new URLSearchParams(location.search).get('frame') === '1') {
+  document.body.classList.add('show-frame');
+}
+
 const danmaku = new Danmaku(stage);
 
 // コメントはサーバーから SSE で届く。何を流すかはサーバー側が決める。

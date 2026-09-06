@@ -33,6 +33,16 @@ const OVERLAY_URL = process.env.OVERLAY_URL ?? 'http://localhost:5173/src/overla
 /** overlay を読めなかったときに読み直すまでの待ち時間(ms) */
 const RETRY_DELAY_MS = 1000;
 
+/**
+ * 実際に読む URL。
+ *
+ * --frame を付けると overlay が赤枠を出す。ウィンドウが画面のどこまで
+ * 覆っているかを確かめるための目印で、既定では出さない。
+ */
+const targetUrl = process.argv.includes('--frame')
+  ? `${OVERLAY_URL}?frame=1`
+  : OVERLAY_URL;
+
 /** @type {BrowserWindow | null} */
 let overlayWindow = null;
 
@@ -96,21 +106,40 @@ function createOverlayWindow() {
   //
   // 待つのではなく繰り返すことで、dev サーバーを後から起動しても繋がる。
   // 依存(wait-on など)を増やさずに済む。
-  overlayWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
-    console.warn(`overlay を読めなかった: ${errorDescription} (${errorCode})`);
-    console.warn(`${RETRY_DELAY_MS}ms 後に ${OVERLAY_URL} を読み直す`);
+  /** @type {ReturnType<typeof setTimeout> | null} 読み直し待ちのタイマー */
+  let retryTimer = null;
 
-    setTimeout(() => {
+  overlayWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    // 二重に予約しない。1 回の失敗につき 1 回だけ読み直す
+    if (retryTimer !== null) {
+      return;
+    }
+
+    console.warn(`overlay を読めなかった: ${errorDescription} (${errorCode})`);
+    console.warn(`${RETRY_DELAY_MS}ms 後に ${targetUrl} を読み直す`);
+
+    retryTimer = setTimeout(() => {
+      retryTimer = null;
+
       // 読み直す前にウィンドウが閉じられていることがある
       if (overlayWindow !== null && !overlayWindow.isDestroyed()) {
-        overlayWindow.loadURL(OVERLAY_URL);
+        overlayWindow.loadURL(targetUrl);
       }
     }, RETRY_DELAY_MS);
   });
 
+  // 読めたら予約済みの読み直しを取り消す。残しておくと表示中の overlay を
+  // 読み直してしまい、SSE の接続が切れる
+  overlayWindow.webContents.on('did-finish-load', () => {
+    if (retryTimer !== null) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+  });
+
   // Vite が配信する overlay を読む。file:// で直接開くと SSE の接続先
   // (相対パスの /events)が解決できないので URL で読む。
-  overlayWindow.loadURL(OVERLAY_URL);
+  overlayWindow.loadURL(targetUrl);
 }
 
 app.whenReady().then(() => {

@@ -34,6 +34,37 @@ body {
   pointer-events: none;
 }
 
+/*
+ * 切り分け用の赤枠。既定では出さない。
+ *
+ * `npm run overlay -- --frame` を付けたときだけ出す。ウィンドウが画面の
+ * どこまで覆っているかと、枠の内側が透けているかを同時に確かめられる。
+ */
+.frame {
+  display: none;
+}
+
+body.show-frame .frame {
+  display: block;
+  position: fixed;
+  inset: 0;
+  border: 4px solid rgba(255, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+body.show-frame .frame::after {
+  content: 'overlay の範囲';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
 .comment {
   position: absolute;
   /* 右端の外から出てくる */

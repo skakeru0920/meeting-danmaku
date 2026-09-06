@@ -9,10 +9,10 @@
   },
   "scripts": {
     "start": "concurrently -n server,vite,overlay -c blue,green,magenta \"npm:dev:server\" \"npm:dev:vite\" \"npm:overlay\"",
-    "dev": "concurrently -n server,vite -c blue,green \"npm:dev:server\" \"npm:dev:vite\"",
+    "dev": "concurrently -n server,vite,overlay -c blue,green,magenta \"npm:dev:server\" \"npm:dev:vite\" \"npm:overlay -- --frame\"",
     "dev:server": "node src/server/index.js",
     "dev:vite": "vite",
-    "dev:dummy": "concurrently -n server,vite -c blue,green \"node src/server/index.js --debug-source\" \"npm:dev:vite\"",
+    "dev:dummy": "concurrently -n server,vite,overlay -c blue,green,magenta \"node src/server/index.js --debug-source\" \"npm:dev:vite\" \"npm:overlay -- --frame\"",
     "typecheck": "tsc -p jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
