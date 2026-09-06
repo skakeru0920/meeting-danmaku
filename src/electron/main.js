@@ -43,6 +43,16 @@ const targetUrl = process.argv.includes('--frame')
   ? `${OVERLAY_URL}?frame=1`
   : OVERLAY_URL;
 
+/**
+ * Zoom クライアントの URL。overlay と同じ Vite が配信する。
+ *
+ * 既定は overlay の 1 つ上の階層から組み立てる。
+ */
+const ZOOM_URL = process.env.ZOOM_URL ?? OVERLAY_URL.replace(/\/src\/overlay\/?$/, '/src/zoom/');
+
+/** @type {BrowserWindow | null} 見えない Zoom クライアント */
+let zoomWindow = null;
+
 /** @type {BrowserWindow | null} */
 let overlayWindow = null;
 
@@ -142,8 +152,66 @@ function createOverlayWindow() {
   overlayWindow.loadURL(targetUrl);
 }
 
+/**
+ * Zoom に繋ぐ見えないウィンドウを作る。
+ *
+ * Meeting SDK はブラウザ前提だが、Electron の中身は Chromium なので
+ * そのまま動く。これでブラウザのタブを開いておく必要がなくなる。
+ *
+ * **画面に出さないぶん、状況がターミナルに出る。** join に失敗しても
+ * 「コメントが流れてこない」としか分からないのを避けるため、
+ * ページ側の console をそのまま転送する。
+ */
+function createZoomWindow() {
+  zoomWindow = new BrowserWindow({
+    show: false,
+    // 音声も映像も使わないが、SDK が初期化時に触るので通常の構成にしておく
+    webPreferences: { backgroundThrottling: false },
+  });
+
+  // ページ側の console を [zoom] 付きでターミナルへ出す。
+  // 参加した / N 件送った / join に失敗した、がここに出る。
+  zoomWindow.webContents.on('console-message', (_event, _level, message) => {
+    console.log(`[zoom] ${message}`);
+  });
+
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let retryTimer = null;
+
+  zoomWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    if (retryTimer !== null) {
+      return;
+    }
+
+    console.warn(`[zoom] 読めなかった: ${errorDescription} (${errorCode})`);
+
+    retryTimer = setTimeout(() => {
+      retryTimer = null;
+      if (zoomWindow !== null && !zoomWindow.isDestroyed()) {
+        zoomWindow.loadURL(ZOOM_URL);
+      }
+    }, RETRY_DELAY_MS);
+  });
+
+  zoomWindow.webContents.on('did-finish-load', () => {
+    if (retryTimer !== null) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+    console.log(`[zoom] ${ZOOM_URL} を読み込んだ`);
+  });
+
+  zoomWindow.loadURL(ZOOM_URL);
+}
+
 app.whenReady().then(() => {
   createOverlayWindow();
+
+  // --with-zoom を付けたときだけ Zoom にも繋ぐ(npm start)。
+  // npm run dev ではブラウザのタブで繋ぐので作らない。
+  if (process.argv.includes('--with-zoom')) {
+    createZoomWindow();
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -152,7 +220,16 @@ app.whenReady().then(() => {
   });
 });
 
-// 検証用なので、ウィンドウを閉じたら終了する(macOS の慣習には従わない)
+// ウィンドウを閉じたら終了する(macOS の慣習には従わない)。
+//
+// overlay を閉じたら Zoom の隠しウィンドウも道連れにする。残しておくと
+// 見えないウィンドウだけが残り、会議に参加したままターミナルが返らない。
 app.on('window-all-closed', () => {
   app.quit();
+});
+
+app.on('before-quit', () => {
+  if (zoomWindow !== null && !zoomWindow.isDestroyed()) {
+    zoomWindow.destroy();
+  }
 });

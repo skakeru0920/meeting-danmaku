@@ -17,8 +17,19 @@ const logEl = document.getElementById('log');
 /** 画面に残すログの件数。増え続けるとタブが重くなる */
 const MAX_LOG_ENTRIES = 50;
 
+/**
+ * 状態を画面とコンソールの両方に出す。
+ *
+ * **コンソールにも出すのは、隠しウィンドウで動くときのため。**
+ * npm start では Electron の見えないウィンドウがこのページを読むので、
+ * 画面表示は誰にも見えない。Electron がこの console を拾って
+ * ターミナルへ [zoom] 付きで転送する。
+ *
+ * @param {string} text
+ */
 function setStatus(text) {
   statusEl.textContent = text;
+  console.log(text);
 }
 
 /**
