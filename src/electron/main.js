@@ -39,8 +39,7 @@ function createOverlayWindow() {
   // 主ディスプレイのみ。MVP はこれでよい(2026-09-06 に決定)。
   // 複数ディスプレイへ出す・出す先を切り替えるのは Icebox の
   // 「multi monitor 対応」に残してある。
-  const display = screen.getPrimaryDisplay();
-  const { bounds, workArea } = display;
+  const { bounds } = screen.getPrimaryDisplay();
 
   overlayWindow = new BrowserWindow({
     x: bounds.x,
@@ -58,9 +57,25 @@ function createOverlayWindow() {
     focusable: false,
     resizable: false,
     movable: false,
-    // 全画面ボタンを持たせない(Space の扱いが変わるため)
-    fullscreenable: false,
+    // メニューバーと Dock の上にも出すために要る 2 つ。
+    //
+    // macOS はウィンドウを表示する瞬間に workArea の内側へ押し込む。
+    // x:0, y:0 を渡しても実際には x:81, y:44(Dock とメニューバーのぶん)に
+    // なり、サイズはそのままなので右下が画面からはみ出す。
+    // 表示後の setBounds では戻せない(効かない)。
+    //
+    // enableLargerThanScreen がその制約を外す。fullscreenable: false だと
+    // 併用しても押し込まれたままなので true にする。実測した組み合わせ:
+    //   fullscreenable:false                        → y:44 NG
+    //   fullscreenable:true                         → y:44 NG
+    //   type:'panel'                                → y:44 NG
+    //   fullscreenable:true + enableLargerThanScreen → y:0  OK
+    fullscreenable: true,
+    enableLargerThanScreen: true,
   });
+
+  // 表示前に貼り直す。表示後だと効かない
+  overlayWindow.setBounds(bounds);
 
   // クリックを背後のアプリへ通す。forward: true にすると
   // マウス移動イベントだけは受け取れる(将来ホバー操作が要るとき用)
@@ -72,17 +87,7 @@ function createOverlayWindow() {
   // 別の Space へ移っても追従させ、フルスクリーンの上にも出す
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-  // 検証用の赤枠を、メニューバーと Dock を避けた位置へ描くための値。
-  // ウィンドウ自体は bounds いっぱいのままにする(弾幕はメニューバーや
-  // Dock の上にも出したいため)。枠だけを workArea の内側へ寄せる。
-  overlayWindow.loadFile(path.join(__dirname, 'index.html'), {
-    query: {
-      insetTop: String(workArea.y - bounds.y),
-      insetRight: String(bounds.x + bounds.width - (workArea.x + workArea.width)),
-      insetBottom: String(bounds.y + bounds.height - (workArea.y + workArea.height)),
-      insetLeft: String(workArea.x - bounds.x),
-    },
-  });
+  overlayWindow.loadFile(path.join(__dirname, 'index.html'));
 }
 
 app.whenReady().then(() => {
