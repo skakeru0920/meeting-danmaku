@@ -31,12 +31,40 @@ Zoom 接続前に見た目を固めておくことで、Plan 004 での作業を
 **完了条件**: ブラウザで開くとコメントが右から左へ流れ、8 秒程度で消える。
 コメントが重なって読めなくならない。背景が透過している。
 
+**結果**(2026-09-06): 完了。`src/overlay/` に `index.html` / `style.css` /
+`main.js` / `danmaku.js` / `lane.js` を作った。
+
+- 流れ方・8 秒・重ならないことはブラウザで目視確認した
+- **背景の透過だけは確認できていない。** 普通のブラウザで開くとブラウザ自身の
+  白地が見えるため。CSS に `background: transparent` があり不透明色を敷いて
+  いないことまでが確認範囲で、実際に透けるかは T-004 で Electron の
+  `transparent: true` ウィンドウに載せたときに分かる
+
+`left` ではなく `transform: translateX()` で動かしている。レイアウトを起こさず
+合成だけで済むため。移動距離は幅を DOM 挿入後に実測して CSS 変数へ渡す。
+
+同時表示上限を超えたコメントは**捨てる**。表示中のものを消して場所を空けると
+読んでいる途中のコメントが消えるので、そちらのほうが不自然と判断した。
+
 ### T-006: `OverlayComment` 型を定義する
 
 `docs/decisions/README.md` の「コメントの内部形式」をそのままコードに落とす。
 それ以上の抽象化はしない。
 
 **完了条件**: 型定義が存在し、`tsc` が通る。
+
+**結果**(2026-09-06): 完了。`src/overlay/types.js` に JSDoc の `@typedef` で置いた。
+`npm run typecheck` が通る。
+
+overlay は Vanilla JS のままにしたいので `.ts` へは移行せず、`jsconfig.json` の
+`checkJs` + `noEmit` で検査だけ行う。実行されるのは素の JS で、ビルド成果物は増えない。
+
+**検査対象は `src/overlay/` に絞った。** 最初 `src/**/*.js` を対象にしたところ、
+`src/zoom/main.js` と `src/server/index.js` と `node_modules/jsonwebtoken` から
+数十件のエラーが出た(`process` が未定義、Express の型が合わない、
+`getElementById` の null チェックが無い)。通すには `@types/node` の追加と
+既存コードの書き換えが要り、T-006 の範囲を超えるため広げなかった。
+`src/zoom/` を型づけるのは `ZoomCommentSource` を書く T-010 が自然。
 
 ### T-007: `CommentSource` インターフェースと `DebugCommentSource`
 
@@ -67,3 +95,27 @@ Zoom 接続前に見た目を固めておくことで、Plan 004 での作業を
 
 Zoom チャットの受信と接続(Plan 004)。Electron / OBS への組み込み(Plan 002 と Plan 004)。
 チャット履歴の永続化(方針として行わない)。
+
+## テスト方針(T-005 で決めた)
+
+Vitest + jsdom を入れた(`npm test`)。
+
+**弾幕が流れる見た目はテストしない。** CSS animation なので目視でしか確認できない。
+テストするのは判断を含む部分に絞る。
+
+| 対象 | 置き場所 |
+|---|---|
+| レーンの round-robin、同時表示上限、レーン数の算出 | `lane.js` / `lane.test.js` |
+| 縦位置、表示時間、上限超過時の破棄、`textContent` での挿入 | `danmaku.js` / `danmaku.test.js` |
+
+そのために、判断を含むロジックを DOM 操作から切り離して `lane.js` へ置いた。
+`lane.js` は DOM を知らない。
+
+`<script>alert(1)</script>` と `<img onerror>` が要素にならず文字列として入ることを
+テストで固定してある。T-009 の完了条件と同じ性質のものを、入力経路ができる前に
+描画側で押さえておく狙い。
+
+あわせて Vite の `root` を `src/zoom` からプロジェクト直下へ移した。
+`root` が `src/zoom` のままだと `src/overlay/` をブラウザで開けないため。
+これに伴い `src/zoom/index.html` の script src を相対パスへ直している
+(HTTP 200 で配信されることは確認済み。実際に join できるかは未確認)。

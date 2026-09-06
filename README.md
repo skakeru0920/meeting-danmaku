@@ -41,7 +41,7 @@ overlay の HTML / CSS / JS は両方式で共用する。
 | Phase | ゴール | 状態 |
 |---|---|---|
 | 1 | Zoom chat → terminal に `console.log` | **完了**(Plan 001) |
-| 2 | debug message → browser overlay | 未着手(Plan 003) |
+| 2 | debug message → browser overlay | 進行中(Plan 003。T-005 / T-006 完了) |
 | 3 | Zoom chat → overlay | 未着手(Plan 004) |
 | 4 | Zoom chat → 画面共有(Electron または OBS) | 未着手(Plan 002 / 004) |
 
@@ -57,7 +57,7 @@ Phase 4 の実現方法は Plan 002 の結果で決まる。Electron の透過�
 |---|---|---|---|
 | 001 | Zoom チャットを受信する(SDK 選定を含む) | 検証 | **完了** |
 | 002 | Electron 透過オーバーレイが画面共有に映るか | 検証 | 未着手 |
-| 003 | Zoom 抜きでコメントが流れる状態を作る | 実装 | 未着手 |
+| 003 | Zoom 抜きでコメントが流れる状態を作る | 実装 | 進行中 |
 | 004 | Zoom チャットを画面共有に流す | 実装 | 未着手 |
 
 001 / 002 / 003 は互いに独立しており並列で進められる。004 は 3 つすべてが前提。
@@ -105,9 +105,9 @@ SDK が React を要求するのとは別の話。
 │   ├── plan/          # タスクの詳細(不確実なものは Spike 節を持つ)
 │   └── decisions/     # 現在有効な決定事項(正本)
 ├── src/
-│   ├── zoom/          # Meeting SDK クライアント(Vite の root)
+│   ├── zoom/          # Meeting SDK クライアント
 │   ├── server/        # Express。SDK JWT の署名
-│   └── overlay/       # 静的 HTML / CSS / JS のオーバーレイ(Plan 003 で作る)
+│   └── overlay/       # 静的 HTML / CSS / JS のオーバーレイ
 └── vite.config.js
 ```
 
@@ -152,9 +152,21 @@ PORT=3000
 npm run dev
 ```
 
-Vite(5173)と署名サーバー(3000)が同時に立つ。
-ブラウザで **http://localhost:5173** を開くと、SDK が `Comment Overlay` という名前で
-会議に参加し、受信したチャットの payload を画面と console に出す。
+Vite(5173)と署名サーバー(3000)が同時に立つ。画面は 2 つある。
+
+| URL | 中身 |
+|---|---|
+| http://localhost:5173/src/zoom/ | Zoom SDK クライアント。チャットの payload を出す |
+| http://localhost:5173/src/overlay/ | overlay。いまはダミーコメントが流れる(T-005) |
+
+Zoom 側を開くと、SDK が `Comment Overlay` という名前で会議に参加し、
+受信したチャットの payload を画面と console に出す。
+
+overlay 側はまだ Zoom と繋がっていない。ダミーのコメントが流れるだけで、
+Zoom チャットを流すのは T-010(Plan 004)。
+
+**背景の透過はブラウザでは確認できない。** ブラウザ自身が白地を敷くため、
+実際に透けるかは Electron の透過ウィンドウか OBS に載せて確かめる(T-004)。
 
 **会議はホストが開始しておく必要がある。** PMI は開始前だと
 `errorCode 3008 / Meeting has not started` で join できない。
@@ -162,6 +174,16 @@ Vite(5173)と署名サーバー(3000)が同時に立つ。
 
 チャットを投稿すると payload が流れる。Everyone 宛と DM の判別は
 `receiver.userId === 0`(0 が Everyone)。
+
+### テストと型検査
+
+```bash
+npm test        # Vitest。overlay のロジック(レーン割り当て・表示上限・XSS 防止)
+npm run typecheck
+```
+
+弾幕が流れる見た目は CSS animation なのでテストしていない。目視で確認する。
+型検査の対象は `src/overlay/` のみ(理由は `jsconfig.json` のメモを参照)。
 
 ## 参考
 

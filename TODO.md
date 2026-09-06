@@ -13,8 +13,7 @@
 | ID | タスク | Plan |
 |---|---|---|
 | T-004 | Electron 透過オーバーレイが画面共有に映るか検証する | 002 |
-| T-005 | ダミーコメントが流れる静的 HTML | 003 |
-| T-006 | `OverlayComment` 型を定義する | 003 |
+| T-007 | `CommentSource` IF と `DebugCommentSource` | 003 |
 
 ## Blocked — 依存待ち
 
@@ -25,8 +24,7 @@ T-012 は T-004 が**失敗した場合にのみ**着手する。成功すれば
 
 | ID | タスク | depends | Plan |
 |---|---|---|---|
-| T-007 | `CommentSource` IF と `DebugCommentSource` | T-006 | 003 |
-| T-008 | WebSocket で Node.js → overlay へ配信 | T-005, T-007 | 003 |
+| T-008 | WebSocket で Node.js → overlay へ配信 | T-007 | 003 |
 | T-009 | dev-only の `/debug` 投稿画面 | T-008 | 003 |
 | T-010 | `ZoomCommentSource` を overlay に接続する | T-009 | 004 |
 | T-011 | 実際の画面共有で通しで確認する | T-004, T-010 | 004 |
