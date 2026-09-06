@@ -4,9 +4,13 @@
     "型は .ts へ移行せず JSDoc で書き、tsc は検査だけに使う(noEmit)。",
     "実行されるのは素の JS のままで、ビルド成果物は増えない。",
     "",
-    "検査対象は src/overlay/ だけ。src/zoom/ は Zoom SDK、src/server/ は",
-    "Express と Node API に依存していて、型を通すには @types/node の追加と",
-    "既存コードの書き換えが要る。overlay の型づけとは別の作業なので広げない。"
+    "検査対象は src/overlay/ と src/zoom/comment-source.js。",
+    "後者は Zoom payload を OverlayComment へ正規化する部分で、SDK に依存せず",
+    "素のオブジェクトだけを扱うので検査できる。",
+    "",
+    "src/zoom/main.js と src/server/ は外している。Zoom SDK / Express / Node API に",
+    "依存していて、型を通すには @types/node の追加と既存コードの書き換えが要る。",
+    "コメントの正規化とは別の作業なので広げない。"
   ],
   "compilerOptions": {
     "target": "ES2022",
@@ -18,5 +22,5 @@
     "strict": true,
     "types": []
   },
-  "include": ["src/overlay/**/*.js"]
+  "include": ["src/overlay/**/*.js", "src/zoom/comment-source.js"]
 }
