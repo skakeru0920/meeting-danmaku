@@ -8,11 +8,11 @@
     "node": ">=24"
   },
   "scripts": {
-    "start": "concurrently -n server,vite,overlay -c blue,green,magenta \"npm:dev:server\" \"npm:dev:vite\" \"npm:overlay\"",
-    "dev": "concurrently -n server,vite,overlay -c blue,green,magenta \"npm:dev:server\" \"npm:dev:vite\" \"npm:overlay -- --frame\"",
+    "start": "concurrently -n server,vite,overlay -c blue,green,magenta \"npm:dev:server\" \"npm:dev:vite\" \"npm:overlay -- --with-zoom\"",
+    "dev": "concurrently -n server,vite,overlay -c blue,green,magenta \"npm:dev:server\" \"OPEN_ZOOM_TAB=1 npm run dev:vite\" \"npm:overlay -- --frame\"",
     "dev:server": "node src/server/index.js",
     "dev:vite": "vite",
-    "dev:dummy": "concurrently -n server,vite,overlay -c blue,green,magenta \"node src/server/index.js --debug-source\" \"npm:dev:vite\" \"npm:overlay -- --frame\"",
+    "dev:dummy": "concurrently -n server,vite,overlay -c blue,green,magenta \"node src/server/index.js --debug-source\" \"OPEN_ZOOM_TAB=1 npm run dev:vite\" \"npm:overlay -- --frame\"",
     "typecheck": "tsc -p jsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",

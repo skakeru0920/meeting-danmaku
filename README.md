@@ -181,24 +181,36 @@ T-010(Plan 004)で、そのときも overlay と SSE の部分は変わらない
 ### Electron オーバーレイ
 
 ```bash
-npm start    # 本番用。サーバー + Vite + overlay
-npm run dev  # 開発用。同じ構成で overlay に赤枠を出す
+npm start    # 本番用。これだけで完結する
+npm run dev  # 開発用。赤枠を出し、Zoom はブラウザのタブで開く
 ```
 
 デスクトップ全体に透過ウィンドウを重ねる。終了は起動したターミナルで Ctrl+C
-(3 つとも止まる)。
+(全部止まる)。
 
-`npm run dev` の赤枠は、ウィンドウが画面のどこまで覆っているかと、枠の内側が
-透けているかを確かめるための目印。**画面共有にも映る**ので、発表では
-`npm start` を使う。
+|  | Zoom への接続 | 赤枠 |
+|---|---|---|
+| `npm start` | Electron の**見えないウィンドウ** | なし |
+| `npm run dev` | **ブラウザのタブ**(自動で開く) | あり |
 
-**Zoom チャットを流すには、別途ブラウザで
-`http://localhost:5173/src/zoom/` を開いて join する。** Meeting SDK は
-ブラウザ前提なので、このタブを閉じるとコメントが止まる。
+**`npm start` はブラウザのタブが要らない。** Meeting SDK はブラウザ前提だが、
+Electron の中身は Chromium なので見えないウィンドウでそのまま動く。
+タブを閉じてコメントが止まる事故が起きない。
 
-個別に起動したいときは `npm run dev`(サーバー + Vite)と `npm run overlay`
-を別のターミナルで動かす。**順序は問わない。** overlay は読めるまで 1 秒ごとに
-読み直すので、dev サーバーを後から起動しても繋がる。
+そのぶん画面では状況が見えないので、**Zoom の状態はターミナルに `[zoom]` 付きで
+出る**。join に失敗したときもここに理由が出る(ミーティング未開始、待機室など)。
+
+`npm run dev` はブラウザのタブで繋ぐ。SDK の画面や devtools が使えるので、
+調査するときはこちら。赤枠はウィンドウが画面のどこまで覆っているかを確かめる
+目印で、**画面共有にも映る**。
+
+**Zoom ミーティングは先に開始しておく。** `role: 0`(participant)で参加するので、
+ホストが開始するまで join できない(`Meeting has not started`)。待機室が有効なら
+`Comment Overlay` の入室を許可する。
+
+個別に起動したいときは `npm run dev:server` と `npm run dev:vite` と
+`npm run overlay` を別のターミナルで動かす。**順序は問わない。** overlay も
+Zoom も読めるまで 1 秒ごとに読み直すので、後から起動しても繋がる。
 
 overlay は `http://localhost:5173/src/overlay/` を読む。ブラウザで開くのと
 同じものが動くので、見た目の調整はブラウザで行える。別ポートで動かしている

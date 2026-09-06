@@ -41,12 +41,15 @@ export default defineConfig({
   plugins: [react(), printLinks()],
   server: {
     port: 5173,
-    // Zoom タブを自動で開く。Meeting SDK はブラウザ前提で、このタブを
-    // 開いている間だけコメントが流れるため、起動時に必ず要る。
+    // Zoom タブを自動で開くのは npm run dev のときだけ。
+    //
+    // npm start では Electron の隠しウィンドウが Zoom に繋ぐので、
+    // ブラウザのタブは要らない(package.json の scripts を参照)。
+    // 開発中は状況が見えるほうがよいのでブラウザで開く。
     //
     // overlay は Electron が表示するのでブラウザでは開かない。
     // /debug は常用しないので手で開く。
-    open: '/src/zoom/',
+    open: process.env.OPEN_ZOOM_TAB === '1' ? '/src/zoom/' : false,
     // Client Secret を扱う /config だけ Express へ回す。
     // Secret はブラウザに出さず、署名済み JWT だけが返る。
     proxy: {
